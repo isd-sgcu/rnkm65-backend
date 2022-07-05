@@ -1,6 +1,6 @@
 proto:
 	protoc --proto_path=src/proto --go_out=. --go-grpc_out=require_unimplemented_servers=false:. user.proto
-
+	protoc --proto_path=src/proto --go_out=. --go-grpc_out=require_unimplemented_servers=false:. group.proto
 test:
 	go vet ./...
 	go test  -v -coverpkg ./src/app/... -coverprofile coverage.out -covermode count ./src/app/...
