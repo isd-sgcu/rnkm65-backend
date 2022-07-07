@@ -53,6 +53,7 @@ func (t *UserServiceTest) SetupTest() {
 		AllergyMedicine: faker.Word(),
 		Disease:         faker.Word(),
 		ImageUrl:        faker.URL(),
+		CanSelectBaan:   true,
 	}
 
 	t.UserDto = &proto.User{
@@ -72,6 +73,7 @@ func (t *UserServiceTest) SetupTest() {
 		AllergyMedicine: t.User.AllergyMedicine,
 		Disease:         t.User.Disease,
 		ImageUrl:        t.User.ImageUrl,
+		CanSelectBaan:   t.User.CanSelectBaan,
 	}
 
 	t.CreateUserReqMock = &proto.CreateUserRequest{
@@ -91,6 +93,7 @@ func (t *UserServiceTest) SetupTest() {
 			AllergyMedicine: t.User.AllergyMedicine,
 			Disease:         t.User.Disease,
 			ImageUrl:        t.User.ImageUrl,
+			CanSelectBaan:   t.User.CanSelectBaan,
 		},
 	}
 
@@ -112,6 +115,7 @@ func (t *UserServiceTest) SetupTest() {
 			AllergyMedicine: t.User.AllergyMedicine,
 			Disease:         t.User.Disease,
 			ImageUrl:        t.User.ImageUrl,
+			CanSelectBaan:   t.User.CanSelectBaan,
 		},
 	}
 }
@@ -168,6 +172,7 @@ func (t *UserServiceTest) TestCreateSuccess() {
 		AllergyMedicine: t.User.AllergyMedicine,
 		Disease:         t.User.Disease,
 		ImageUrl:        t.User.ImageUrl,
+		CanSelectBaan:   t.User.CanSelectBaan,
 	}
 
 	repo.On("Create", in).Return(t.User, nil)
@@ -199,6 +204,7 @@ func (t *UserServiceTest) TestCreateInternalErr() {
 		AllergyMedicine: t.User.AllergyMedicine,
 		Disease:         t.User.Disease,
 		ImageUrl:        t.User.ImageUrl,
+		CanSelectBaan:   t.User.CanSelectBaan,
 	}
 
 	repo.On("Create", in).Return(nil, errors.New("something wrong"))

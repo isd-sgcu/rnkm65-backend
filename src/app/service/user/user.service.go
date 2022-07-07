@@ -134,6 +134,7 @@ func DtoToRaw(in *proto.User) (result *user.User, err error) {
 		AllergyMedicine: in.AllergyMedicine,
 		Disease:         in.Disease,
 		ImageUrl:        in.ImageUrl,
+		CanSelectBaan:   in.CanSelectBaan,
 	}, nil
 }
 func RawToDto(in *user.User) *proto.User {
@@ -154,5 +155,6 @@ func RawToDto(in *user.User) *proto.User {
 		AllergyMedicine: in.AllergyMedicine,
 		Disease:         in.Disease,
 		ImageUrl:        in.ImageUrl,
+		CanSelectBaan:   in.CanSelectBaan,
 	}
 }
