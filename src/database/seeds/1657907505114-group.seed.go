@@ -4,6 +4,7 @@ import (
 	"github.com/bxcodec/faker/v3"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/model/group"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/model/user"
+	"github.com/isd-sgcu/rnkm65-backend/src/app/utils"
 	"math/rand"
 )
 
@@ -30,8 +31,8 @@ func (s Seed) GroupSeed1657907505114() error {
 			FoodRestriction: faker.Word(),
 			AllergyMedicine: faker.Word(),
 			Disease:         faker.Word(),
-			CanSelectBaan:   false,
-			GroupID:         grp.ID,
+			CanSelectBaan:   utils.BoolAdr(false),
+			GroupID:         &grp.ID,
 		}
 		err = s.db.Create(&usr).Error
 		if err != nil {
@@ -60,8 +61,8 @@ func (s Seed) GroupSeed1657907505114() error {
 				FoodRestriction: faker.Word(),
 				AllergyMedicine: faker.Word(),
 				Disease:         faker.Word(),
-				CanSelectBaan:   false,
-				GroupID:         grp.ID,
+				CanSelectBaan:   utils.BoolAdr(false),
+				GroupID:         &grp.ID,
 			}
 			err = s.db.Create(&usr).Error
 			if err != nil {

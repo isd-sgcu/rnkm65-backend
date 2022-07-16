@@ -7,6 +7,7 @@ import (
 	"github.com/isd-sgcu/rnkm65-backend/src/app/model"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/model/group"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/model/user"
+	"github.com/isd-sgcu/rnkm65-backend/src/app/utils"
 	mock "github.com/isd-sgcu/rnkm65-backend/src/mocks/group"
 	"github.com/isd-sgcu/rnkm65-backend/src/proto"
 	"github.com/pkg/errors"
@@ -55,8 +56,8 @@ func (t *GroupServiceTest) SetupTest() {
 		FoodRestriction: faker.Word(),
 		AllergyMedicine: faker.Word(),
 		Disease:         faker.Word(),
-		CanSelectBaan:   true,
-		GroupID:         uuid.New(),
+		CanSelectBaan:   utils.BoolAdr(true),
+		GroupID:         utils.UUIDAdr(uuid.New()),
 	}
 	t.UserDtoMock = &proto.User{
 		Id:              t.UserMock.ID.String(),
@@ -74,12 +75,12 @@ func (t *GroupServiceTest) SetupTest() {
 		FoodRestriction: t.UserMock.FoodRestriction,
 		AllergyMedicine: t.UserMock.AllergyMedicine,
 		Disease:         t.UserMock.Disease,
-		CanSelectBaan:   t.UserMock.CanSelectBaan,
+		CanSelectBaan:   *t.UserMock.CanSelectBaan,
 		GroupId:         t.UserMock.GroupID.String(),
 	}
 	t.Group = &group.Group{
 		Base: model.Base{
-			ID:        t.UserMock.GroupID,
+			ID:        *t.UserMock.GroupID,
 			CreatedAt: time.Time{},
 			UpdatedAt: time.Time{},
 			DeletedAt: gorm.DeletedAt{},
@@ -283,8 +284,8 @@ func (t *GroupServiceTest) TestJoinSuccess1() {
 		FoodRestriction: faker.Word(),
 		AllergyMedicine: faker.Word(),
 		Disease:         faker.Word(),
-		CanSelectBaan:   true,
-		GroupID:         uuid.New(),
+		CanSelectBaan:   utils.BoolAdr(true),
+		GroupID:         utils.UUIDAdr(uuid.New()),
 	}
 	afterJoinedUser := &user.User{
 		Base: model.Base{
@@ -308,7 +309,7 @@ func (t *GroupServiceTest) TestJoinSuccess1() {
 		AllergyMedicine: beforeJoinedUser.AllergyMedicine,
 		Disease:         beforeJoinedUser.Disease,
 		CanSelectBaan:   beforeJoinedUser.CanSelectBaan,
-		GroupID:         t.Group.ID,
+		GroupID:         utils.UUIDAdr(t.Group.ID),
 	}
 	afterJoinedUserDto := &proto.User{
 		Id:              afterJoinedUser.ID.String(),
@@ -326,7 +327,7 @@ func (t *GroupServiceTest) TestJoinSuccess1() {
 		FoodRestriction: afterJoinedUser.FoodRestriction,
 		AllergyMedicine: afterJoinedUser.AllergyMedicine,
 		Disease:         afterJoinedUser.Disease,
-		CanSelectBaan:   afterJoinedUser.CanSelectBaan,
+		CanSelectBaan:   *afterJoinedUser.CanSelectBaan,
 		GroupId:         afterJoinedUser.GroupID.String(),
 	}
 
@@ -384,8 +385,8 @@ func (t *GroupServiceTest) TestJoinSuccess2() {
 		FoodRestriction: faker.Word(),
 		AllergyMedicine: faker.Word(),
 		Disease:         faker.Word(),
-		CanSelectBaan:   true,
-		GroupID:         uuid.New(),
+		CanSelectBaan:   utils.BoolAdr(true),
+		GroupID:         utils.UUIDAdr(uuid.New()),
 	}
 	headUserDto := &proto.User{
 		Id:              headUser.ID.String(),
@@ -403,12 +404,12 @@ func (t *GroupServiceTest) TestJoinSuccess2() {
 		FoodRestriction: headUser.FoodRestriction,
 		AllergyMedicine: headUser.AllergyMedicine,
 		Disease:         headUser.Disease,
-		CanSelectBaan:   headUser.CanSelectBaan,
+		CanSelectBaan:   *headUser.CanSelectBaan,
 		GroupId:         headUser.GroupID.String(),
 	}
 	prevGrp := &group.Group{
 		Base: model.Base{
-			ID:        headUser.GroupID,
+			ID:        *headUser.GroupID,
 			CreatedAt: time.Time{},
 			UpdatedAt: time.Time{},
 			DeletedAt: gorm.DeletedAt{},
@@ -439,8 +440,8 @@ func (t *GroupServiceTest) TestJoinSuccess2() {
 		FoodRestriction: t.UserMock.FoodRestriction,
 		AllergyMedicine: t.UserMock.AllergyMedicine,
 		Disease:         t.UserMock.Disease,
-		CanSelectBaan:   true,
-		GroupID:         prevGrp.ID,
+		CanSelectBaan:   utils.BoolAdr(true),
+		GroupID:         utils.UUIDAdr(prevGrp.ID),
 	}
 	joinUserDto := &proto.User{
 		Id:              joinUser.ID.String(),
@@ -458,7 +459,7 @@ func (t *GroupServiceTest) TestJoinSuccess2() {
 		FoodRestriction: joinUser.FoodRestriction,
 		AllergyMedicine: joinUser.AllergyMedicine,
 		Disease:         joinUser.Disease,
-		CanSelectBaan:   joinUser.CanSelectBaan,
+		CanSelectBaan:   *joinUser.CanSelectBaan,
 		GroupId:         joinUser.GroupID.String(),
 	}
 
@@ -548,8 +549,8 @@ func (t *GroupServiceTest) TestJoinFullGroup() {
 		FoodRestriction: faker.Word(),
 		AllergyMedicine: faker.Word(),
 		Disease:         faker.Word(),
-		CanSelectBaan:   true,
-		GroupID:         uuid.New(),
+		CanSelectBaan:   utils.BoolAdr(true),
+		GroupID:         utils.UUIDAdr(uuid.New()),
 	}
 	member1User := &user.User{
 		Base: model.Base{
@@ -572,7 +573,7 @@ func (t *GroupServiceTest) TestJoinFullGroup() {
 		FoodRestriction: faker.Word(),
 		AllergyMedicine: faker.Word(),
 		Disease:         faker.Word(),
-		CanSelectBaan:   true,
+		CanSelectBaan:   utils.BoolAdr(true),
 		GroupID:         headUser.GroupID,
 	}
 	member2User := &user.User{
@@ -596,13 +597,13 @@ func (t *GroupServiceTest) TestJoinFullGroup() {
 		FoodRestriction: faker.Word(),
 		AllergyMedicine: faker.Word(),
 		Disease:         faker.Word(),
-		CanSelectBaan:   true,
+		CanSelectBaan:   utils.BoolAdr(true),
 		GroupID:         headUser.GroupID,
 	}
 
 	fullGroup := &group.Group{
 		Base: model.Base{
-			ID:        headUser.GroupID,
+			ID:        *headUser.GroupID,
 			CreatedAt: time.Time{},
 			UpdatedAt: time.Time{},
 			DeletedAt: gorm.DeletedAt{},
@@ -647,8 +648,8 @@ func (t *GroupServiceTest) TestDeleteMemberSuccess() {
 		FoodRestriction: faker.Word(),
 		AllergyMedicine: faker.Word(),
 		Disease:         faker.Word(),
-		CanSelectBaan:   true,
-		GroupID:         t.Group.ID,
+		CanSelectBaan:   utils.BoolAdr(true),
+		GroupID:         utils.UUIDAdr(t.Group.ID),
 	}
 
 	prevGroup := &group.Group{
@@ -687,8 +688,8 @@ func (t *GroupServiceTest) TestDeleteMemberSuccess() {
 		FoodRestriction: deletedUser.FoodRestriction,
 		AllergyMedicine: deletedUser.AllergyMedicine,
 		Disease:         deletedUser.Disease,
-		CanSelectBaan:   true,
-		GroupID:         in.ID,
+		CanSelectBaan:   utils.BoolAdr(true),
+		GroupID:         utils.UUIDAdr(in.ID),
 	}
 	want := &proto.DeleteMemberGroupResponse{Group: t.GroupDto}
 
@@ -727,8 +728,8 @@ func (t *GroupServiceTest) TestDeleteMemberForbidden() {
 		FoodRestriction: faker.Word(),
 		AllergyMedicine: faker.Word(),
 		Disease:         faker.Word(),
-		CanSelectBaan:   true,
-		GroupID:         t.Group.ID,
+		CanSelectBaan:   utils.BoolAdr(true),
+		GroupID:         utils.UUIDAdr(t.Group.ID),
 	}
 
 	prevGroup := &group.Group{
@@ -806,8 +807,8 @@ func (t *GroupServiceTest) TestLeaveGroupSuccess() {
 		FoodRestriction: faker.Word(),
 		AllergyMedicine: faker.Word(),
 		Disease:         faker.Word(),
-		CanSelectBaan:   true,
-		GroupID:         t.Group.ID,
+		CanSelectBaan:   utils.BoolAdr(true),
+		GroupID:         utils.UUIDAdr(t.Group.ID),
 	}
 	prevGrp := &group.Group{
 		Base: model.Base{
@@ -851,7 +852,7 @@ func (t *GroupServiceTest) TestLeaveGroupSuccess() {
 		AllergyMedicine: leavedUser.AllergyMedicine,
 		Disease:         leavedUser.Disease,
 		CanSelectBaan:   leavedUser.CanSelectBaan,
-		GroupID:         in.ID,
+		GroupID:         utils.UUIDAdr(in.ID),
 	}
 	updatedUserDto := &proto.User{
 		Id:              updatedUser.ID.String(),
@@ -869,7 +870,7 @@ func (t *GroupServiceTest) TestLeaveGroupSuccess() {
 		FoodRestriction: updatedUser.FoodRestriction,
 		AllergyMedicine: updatedUser.AllergyMedicine,
 		Disease:         updatedUser.Disease,
-		CanSelectBaan:   updatedUser.CanSelectBaan,
+		CanSelectBaan:   *updatedUser.CanSelectBaan,
 		GroupId:         updatedUser.GroupID.String(),
 	}
 	repo.On("UpdateUser", updatedUser).Return(updatedUser, nil)
@@ -957,8 +958,8 @@ func (t *GroupServiceTest) TestLeaveGroupInternalErr() {
 		FoodRestriction: faker.Word(),
 		AllergyMedicine: faker.Word(),
 		Disease:         faker.Word(),
-		CanSelectBaan:   true,
-		GroupID:         t.Group.ID,
+		CanSelectBaan:   utils.BoolAdr(true),
+		GroupID:         utils.UUIDAdr(t.Group.ID),
 	}
 	prevGrp := &group.Group{
 		Base: model.Base{

@@ -59,7 +59,7 @@ func (s *Service) Create(_ context.Context, req *proto.CreateGroupRequest) (res 
 		return nil, status.Error(codes.Internal, "failed to create group")
 	}
 
-	usr.GroupID = in.ID
+	usr.GroupID = &in.ID
 	err = s.repo.UpdateUser(usr)
 	in.Members = []*user.User{usr}
 
@@ -106,7 +106,7 @@ func (s *Service) Join(_ context.Context, req *proto.JoinGroupRequest) (res *pro
 		return nil, status.Error(codes.NotFound, "user not found")
 	}
 	prevGroupId := joinUser.GroupID
-	joinUser.GroupID = joinGroup.ID
+	joinUser.GroupID = &joinGroup.ID
 	err = s.repo.UpdateUser(joinUser)
 
 	if req.IsLeader && req.Members == 1 {
@@ -150,7 +150,7 @@ func (s *Service) DeleteMember(_ context.Context, req *proto.DeleteMemberGroupRe
 		}
 	}
 	deletedGrp.Members = removedMember
-	removedUser.GroupID = newGroup.ID
+	removedUser.GroupID = &newGroup.ID
 	err = s.repo.UpdateUser(removedUser)
 
 	return &proto.DeleteMemberGroupResponse{Group: RawToDto(deletedGrp)}, nil
@@ -186,7 +186,7 @@ func (s *Service) Leave(_ context.Context, req *proto.LeaveGroupRequest) (res *p
 		return nil, status.Error(codes.Internal, "failed to create group")
 	}
 
-	leavedUser.GroupID = in.ID
+	leavedUser.GroupID = &in.ID
 	err = s.repo.UpdateUser(leavedUser)
 	in.Members = []*user.User{leavedUser}
 	return &proto.LeaveGroupResponse{Group: RawToDto(in)}, nil
@@ -224,8 +224,8 @@ func DtoToRaw(in *proto.Group) (result *group.Group, err error) {
 			FoodRestriction: usr.FoodRestriction,
 			AllergyMedicine: usr.AllergyMedicine,
 			Disease:         usr.Disease,
-			CanSelectBaan:   usr.CanSelectBaan,
-			GroupID:         groupId,
+			CanSelectBaan:   &usr.CanSelectBaan,
+			GroupID:         &groupId,
 		}
 		members = append(members, newUser)
 	}
@@ -270,7 +270,7 @@ func RawToDto(in *group.Group) *proto.Group {
 			AllergyMedicine: usr.AllergyMedicine,
 			Disease:         usr.Disease,
 			ImageUrl:        "",
-			CanSelectBaan:   usr.CanSelectBaan,
+			CanSelectBaan:   *usr.CanSelectBaan,
 			GroupId:         usr.GroupID.String(),
 		}
 		members = append(members, newUser)
