@@ -1,6 +1,7 @@
 package user
 
 import (
+	"github.com/google/uuid"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/model"
 )
 
@@ -22,4 +23,5 @@ type User struct {
 	Disease         string `json:"disease" gorm:"type:tinytext"`
 	CanSelectBaan   bool   `json:"can_select_baan"`
 	IsVerify        bool   `json:"is_verify"`
+	GroupID         uuid.UUID `json:"group_id" gorm:"index"`
 }

@@ -163,10 +163,17 @@ func (s *Service) Delete(_ context.Context, req *proto.DeleteUserRequest) (res *
 }
 
 func DtoToRaw(in *proto.User) (result *user.User, err error) {
-	var id uuid.UUID
+	var id, groupId uuid.UUID
 
 	if in.Id != "" {
 		id, err = uuid.Parse(in.Id)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if in.GroupId != "" {
+		groupId, err = uuid.Parse(in.GroupId)
 		if err != nil {
 			return nil, err
 		}
@@ -194,6 +201,7 @@ func DtoToRaw(in *proto.User) (result *user.User, err error) {
 		AllergyMedicine: in.AllergyMedicine,
 		Disease:         in.Disease,
 		CanSelectBaan:   in.CanSelectBaan,
+		GroupID:         groupId,
 	}, nil
 }
 func RawToDto(in *user.User, imgUrl string) *proto.User {
@@ -215,5 +223,7 @@ func RawToDto(in *user.User, imgUrl string) *proto.User {
 		Disease:         in.Disease,
 		ImageUrl:        imgUrl,
 		CanSelectBaan:   in.CanSelectBaan,
+		IsVerify:        in.IsVerify,
+		GroupId:         in.GroupID.String(),
 	}
 }
