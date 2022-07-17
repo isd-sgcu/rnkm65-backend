@@ -54,6 +54,7 @@ func (t *UserServiceTest) SetupTest() {
 		FoodRestriction: faker.Word(),
 		AllergyMedicine: faker.Word(),
 		Disease:         faker.Word(),
+		GroupID:         utils.UUIDAdr(uuid.New()),
 		CanSelectBaan:   utils.BoolAdr(true),
 		IsVerify:        utils.BoolAdr(true),
 	}
@@ -76,6 +77,7 @@ func (t *UserServiceTest) SetupTest() {
 		Disease:         t.User.Disease,
 		CanSelectBaan:   *t.User.CanSelectBaan,
 		IsVerify:        *t.User.IsVerify,
+		GroupId:         t.User.GroupID.String(),
 	}
 
 	t.CreateUserReqMock = &proto.CreateUserRequest{
@@ -96,6 +98,7 @@ func (t *UserServiceTest) SetupTest() {
 			Disease:         t.User.Disease,
 			CanSelectBaan:   *t.User.CanSelectBaan,
 			IsVerify:        *t.User.IsVerify,
+			GroupId:         t.User.GroupID.String(),
 		},
 	}
 
@@ -118,6 +121,7 @@ func (t *UserServiceTest) SetupTest() {
 			Disease:         t.User.Disease,
 			CanSelectBaan:   *t.User.CanSelectBaan,
 			IsVerify:        *t.User.IsVerify,
+			GroupId:         t.User.GroupID.String(),
 		},
 	}
 }

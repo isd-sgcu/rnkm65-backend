@@ -180,6 +180,8 @@ func DtoToRaw(in *proto.User) (result *user.User, err error) {
 			return nil, err
 		}
 
+		groupId = &gId
+
 		if gId == uuid.Nil {
 			groupId = nil
 		}
@@ -206,6 +208,7 @@ func DtoToRaw(in *proto.User) (result *user.User, err error) {
 		FoodRestriction: in.FoodRestriction,
 		AllergyMedicine: in.AllergyMedicine,
 		Disease:         in.Disease,
+		GroupID:         groupId,
 		CanSelectBaan:   &in.CanSelectBaan,
 		GroupID:         groupId,
 	}, nil
@@ -239,5 +242,6 @@ func RawToDto(in *user.User, imgUrl string) *proto.User {
 		ImageUrl:        imgUrl,
 		CanSelectBaan:   *in.CanSelectBaan,
 		IsVerify:        *in.IsVerify,
+		GroupId:         in.GroupID.String(),
 	}
 }

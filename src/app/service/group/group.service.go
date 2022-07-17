@@ -6,6 +6,7 @@ import (
 	"github.com/isd-sgcu/rnkm65-backend/src/app/model"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/model/group"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/model/user"
+	"github.com/isd-sgcu/rnkm65-backend/src/app/utils"
 	"github.com/isd-sgcu/rnkm65-backend/src/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -14,20 +15,25 @@ import (
 )
 
 type Service struct {
-	repo IRepository
+	repo     IRepository
+	userRepo IUserRepository
 }
 
 type IRepository interface {
-	FindUserById(string, *user.User) error
 	FindGroupByToken(string, *group.Group) error
+	FindGroupById(string, *group.Group) error
 	Create(*group.Group) error
-	UpdateUser(*user.User) error
 	UpdateWithLeader(string, *group.Group) error
 	Delete(string) error
 }
 
-func NewService(repo IRepository) *Service {
-	return &Service{repo: repo}
+type IUserRepository interface {
+	FindOne(string, *user.User) error
+	SaveUser(*user.User) error
+}
+
+func NewService(repo IRepository, userRepo IUserRepository) *Service {
+	return &Service{repo: repo, userRepo: userRepo}
 }
 
 func (s *Service) FindByToken(_ context.Context, req *proto.FindByTokenGroupRequest) (res *proto.FindByTokenGroupResponse, err error) {
@@ -46,7 +52,7 @@ func (s *Service) Create(_ context.Context, req *proto.CreateGroupRequest) (res 
 	}
 
 	usr := &user.User{}
-	err = s.repo.FindUserById(req.UserId, usr)
+	err = s.userRepo.FindOne(req.UserId, usr)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "user not found")
 	}
@@ -60,7 +66,7 @@ func (s *Service) Create(_ context.Context, req *proto.CreateGroupRequest) (res 
 	}
 
 	usr.GroupID = &in.ID
-	err = s.repo.UpdateUser(usr)
+	err = s.userRepo.SaveUser(usr)
 	in.Members = []*user.User{usr}
 
 	return &proto.CreateGroupResponse{Group: RawToDto(in)}, nil
@@ -101,16 +107,19 @@ func (s *Service) Join(_ context.Context, req *proto.JoinGroupRequest) (res *pro
 	}
 
 	joinUser := &user.User{}
-	err = s.repo.FindUserById(req.UserId, joinUser)
+	err = s.userRepo.FindOne(req.UserId, joinUser)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "user not found")
 	}
 	prevGroupId := joinUser.GroupID
 	joinUser.GroupID = &joinGroup.ID
-	err = s.repo.UpdateUser(joinUser)
+	err = s.userRepo.SaveUser(joinUser)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "user not found")
+	}
 
 	if req.IsLeader && req.Members == 1 {
-		err = s.repo.Delete(prevGroupId.String())
+		_ = s.repo.Delete(prevGroupId.String())
 	}
 
 	joinGroup.Members = append(joinGroup.Members, joinUser)
@@ -118,42 +127,40 @@ func (s *Service) Join(_ context.Context, req *proto.JoinGroupRequest) (res *pro
 }
 
 func (s *Service) DeleteMember(_ context.Context, req *proto.DeleteMemberGroupRequest) (res *proto.DeleteMemberGroupResponse, err error) {
-	_, err = uuid.Parse(req.DeletedId)
+	_, err = uuid.Parse(req.UserId)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid user id")
 	}
 
+	removedUser := &user.User{}
+	err = s.userRepo.FindOne(req.UserId, removedUser)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "user not found")
+	}
+
 	deletedGrp := &group.Group{}
-	err = s.repo.FindGroupByToken(req.Token, deletedGrp)
+	err = s.repo.FindGroupById(removedUser.GroupID.String(), deletedGrp)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "group not found")
 	}
 
-	if deletedGrp.LeaderID != req.UserId {
+	if deletedGrp.LeaderID != req.LeaderId {
 		return nil, status.Error(codes.PermissionDenied, "not allowed")
 	}
 
 	//create a new group for removed user
 	newGroup := &group.Group{
-		LeaderID: req.DeletedId,
+		LeaderID: req.UserId,
 	}
 	err = s.repo.Create(newGroup)
-
-	//remove the user from the group
-	var removedMember []*user.User
-	var removedUser *user.User
-	for _, usr := range deletedGrp.Members {
-		if usr.ID.String() == req.DeletedId {
-			removedUser = usr
-		} else {
-			removedMember = append(removedMember, usr)
-		}
-	}
-	deletedGrp.Members = removedMember
 	removedUser.GroupID = &newGroup.ID
-	err = s.repo.UpdateUser(removedUser)
 
-	return &proto.DeleteMemberGroupResponse{Group: RawToDto(deletedGrp)}, nil
+	_ = s.userRepo.SaveUser(removedUser)
+
+	afterDeleteGrp := &group.Group{}
+	_ = s.repo.FindGroupByToken(deletedGrp.Token, afterDeleteGrp)
+
+	return &proto.DeleteMemberGroupResponse{Group: RawToDto(afterDeleteGrp)}, nil
 }
 
 func (s *Service) Leave(_ context.Context, req *proto.LeaveGroupRequest) (res *proto.LeaveGroupResponse, err error) {
@@ -161,8 +168,14 @@ func (s *Service) Leave(_ context.Context, req *proto.LeaveGroupRequest) (res *p
 		return nil, status.Error(codes.InvalidArgument, "invalid user id")
 	}
 
+	leavedUser := &user.User{}
+	err = s.userRepo.FindOne(req.UserId, leavedUser)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "user not found")
+	}
+
 	prevGrp := &group.Group{}
-	err = s.repo.FindGroupByToken(req.Token, prevGrp)
+	err = s.repo.FindGroupById(leavedUser.GroupID.String(), prevGrp)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "group not found")
 	}
@@ -171,25 +184,22 @@ func (s *Service) Leave(_ context.Context, req *proto.LeaveGroupRequest) (res *p
 		return nil, status.Error(codes.PermissionDenied, "not allowed")
 	}
 
-	leavedUser := &user.User{}
-	for _, usr := range prevGrp.Members {
-		if usr.ID.String() == req.UserId {
-			leavedUser = usr
-			break
-		}
-	}
 	in := &group.Group{
-		LeaderID: req.UserId,
+		LeaderID: leavedUser.ID.String(),
 	}
 	err = s.repo.Create(in)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to create group")
 	}
-
 	leavedUser.GroupID = &in.ID
-	err = s.repo.UpdateUser(leavedUser)
-	in.Members = []*user.User{leavedUser}
-	return &proto.LeaveGroupResponse{Group: RawToDto(in)}, nil
+
+	err = s.userRepo.SaveUser(leavedUser)
+
+	newGroup := &group.Group{}
+
+	_ = s.repo.FindGroupByToken(in.Token, newGroup)
+
+	return &proto.LeaveGroupResponse{Group: RawToDto(newGroup)}, nil
 }
 
 func DtoToRaw(in *proto.Group) (result *group.Group, err error) {
@@ -253,6 +263,9 @@ func DtoToRaw(in *proto.Group) (result *group.Group, err error) {
 func RawToDto(in *group.Group) *proto.Group {
 	var members []*proto.User
 	for _, usr := range in.Members {
+		if usr.IsVerify == nil {
+			usr.IsVerify = utils.BoolAdr(false)
+		}
 		newUser := &proto.User{
 			Id:              usr.ID.String(),
 			Title:           usr.Title,
@@ -271,6 +284,7 @@ func RawToDto(in *group.Group) *proto.Group {
 			Disease:         usr.Disease,
 			ImageUrl:        "",
 			CanSelectBaan:   *usr.CanSelectBaan,
+			IsVerify:        *usr.IsVerify,
 			GroupId:         usr.GroupID.String(),
 		}
 		members = append(members, newUser)
