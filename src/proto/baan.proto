@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package baan;
+
+option go_package = "src/proto";
+
+service BaanService {
+  rpc GetAllBaan(GetAllBaanRequest) returns (GetAllBaanResponse) {}
+  rpc GetBaan(GetBaanRequest) returns (GetBaanResponse) {}
+}
+
+enum BaanSize{
+  S = 0;
+  M = 1;
+  L = 2;
+  XL = 3;
+  XXL = 4;
+}
+
+message Baan{
+  string id = 1;
+  string NameTH = 2;
+  string DescriptionTH = 3;
+  string NameEN = 4;
+  string DescriptionEN = 5;
+  BaanSize Size = 6;
+  string Facebook = 7;
+  string Instagram = 8;
+  string Line = 9;
+}
+
+// Get All Baan
+
+message GetAllBaanRequest{
+}
+
+message GetAllBaanResponse{
+  repeated Baan baans = 1;
+}
+
+// Get Baan
+
+message GetBaanRequest{
+  string id = 1;
+}
+
+message GetBaanResponse{
+  Baan baan = 1;
+}

@@ -25,6 +25,7 @@ type User struct {
 	CanSelectBaan   *bool      `json:"can_select_baan"`
 	IsVerify        *bool      `json:"is_verify"`
 	GroupID         *uuid.UUID `json:"group_id" gorm:"index"`
+	BaanID          uuid.UUID `json:"baan_id" gorm:"index"`
 }
 
 func (u *User) BeforeCreate(_ *gorm.DB) error {
