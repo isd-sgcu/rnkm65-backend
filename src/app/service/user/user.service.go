@@ -210,7 +210,6 @@ func DtoToRaw(in *proto.User) (result *user.User, err error) {
 		Disease:         in.Disease,
 		GroupID:         groupId,
 		CanSelectBaan:   &in.CanSelectBaan,
-		GroupID:         groupId,
 	}, nil
 }
 
