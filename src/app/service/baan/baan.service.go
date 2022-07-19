@@ -92,7 +92,7 @@ func (s *Service) FindOneBaan(_ context.Context, req *proto.FindOneBaanRequest) 
 				Str("module", "find one").
 				Msg("Error while get cache")
 
-			return nil, status.Error(codes.Unavailable, "Service is down")
+			return nil, status.Error(codes.Unavailable, "Error while connecting to cache server")
 		}
 
 		return &proto.FindOneBaanResponse{Baan: RawToDto(&result)}, nil
@@ -119,7 +119,7 @@ func (s *Service) FindOneBaan(_ context.Context, req *proto.FindOneBaanRequest) 
 			Str("module", "find all").
 			Msg("Error while saving the cache")
 
-		return nil, status.Error(codes.Unavailable, "Service is down")
+		return nil, status.Error(codes.Unavailable, "Error while connecting to cache server")
 	}
 
 	return &proto.FindOneBaanResponse{Baan: RawToDto(&result)}, nil
