@@ -15,7 +15,10 @@ type Baan struct {
 	ImageUrl      string        `json:"image_url" gorm:"type:text"`
 	Size          baan.BaanSize `json:"size" gorm:"type:tinyint"`
 	Facebook      string        `json:"facebook" gorm:"type:tinytext"`
+	FacebookUrl   string        `json:"facebook_url" gorm:"type:text"`
 	Instagram     string        `json:"instagram" gorm:"type:tinytext"`
+	InstagramUrl  string        `json:"instagram_url" gorm:"type:text"`
 	Line          string        `json:"line" gorm:"type:tinytext"`
+	LineUrl       string        `json:"line_url" gorm:"type:text"`
 	Members       []*user.User  `json:"members"`
 }

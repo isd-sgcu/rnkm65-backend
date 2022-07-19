@@ -22,8 +22,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type BaanServiceClient interface {
-	GetAllBaan(ctx context.Context, in *GetAllBaanRequest, opts ...grpc.CallOption) (*GetAllBaanResponse, error)
-	GetBaan(ctx context.Context, in *GetBaanRequest, opts ...grpc.CallOption) (*GetBaanResponse, error)
+	FindAllBaan(ctx context.Context, in *FindAllBaanRequest, opts ...grpc.CallOption) (*FindAllBaanResponse, error)
+	FindOneBaan(ctx context.Context, in *FindOneBaanRequest, opts ...grpc.CallOption) (*FindOneBaanResponse, error)
 }
 
 type baanServiceClient struct {
@@ -34,18 +34,18 @@ func NewBaanServiceClient(cc grpc.ClientConnInterface) BaanServiceClient {
 	return &baanServiceClient{cc}
 }
 
-func (c *baanServiceClient) GetAllBaan(ctx context.Context, in *GetAllBaanRequest, opts ...grpc.CallOption) (*GetAllBaanResponse, error) {
-	out := new(GetAllBaanResponse)
-	err := c.cc.Invoke(ctx, "/baan.BaanService/GetAllBaan", in, out, opts...)
+func (c *baanServiceClient) FindAllBaan(ctx context.Context, in *FindAllBaanRequest, opts ...grpc.CallOption) (*FindAllBaanResponse, error) {
+	out := new(FindAllBaanResponse)
+	err := c.cc.Invoke(ctx, "/baan.BaanService/FindAllBaan", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *baanServiceClient) GetBaan(ctx context.Context, in *GetBaanRequest, opts ...grpc.CallOption) (*GetBaanResponse, error) {
-	out := new(GetBaanResponse)
-	err := c.cc.Invoke(ctx, "/baan.BaanService/GetBaan", in, out, opts...)
+func (c *baanServiceClient) FindOneBaan(ctx context.Context, in *FindOneBaanRequest, opts ...grpc.CallOption) (*FindOneBaanResponse, error) {
+	out := new(FindOneBaanResponse)
+	err := c.cc.Invoke(ctx, "/baan.BaanService/FindOneBaan", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -56,19 +56,19 @@ func (c *baanServiceClient) GetBaan(ctx context.Context, in *GetBaanRequest, opt
 // All implementations should embed UnimplementedBaanServiceServer
 // for forward compatibility
 type BaanServiceServer interface {
-	GetAllBaan(context.Context, *GetAllBaanRequest) (*GetAllBaanResponse, error)
-	GetBaan(context.Context, *GetBaanRequest) (*GetBaanResponse, error)
+	FindAllBaan(context.Context, *FindAllBaanRequest) (*FindAllBaanResponse, error)
+	FindOneBaan(context.Context, *FindOneBaanRequest) (*FindOneBaanResponse, error)
 }
 
 // UnimplementedBaanServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedBaanServiceServer struct {
 }
 
-func (UnimplementedBaanServiceServer) GetAllBaan(context.Context, *GetAllBaanRequest) (*GetAllBaanResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetAllBaan not implemented")
+func (UnimplementedBaanServiceServer) FindAllBaan(context.Context, *FindAllBaanRequest) (*FindAllBaanResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FindAllBaan not implemented")
 }
-func (UnimplementedBaanServiceServer) GetBaan(context.Context, *GetBaanRequest) (*GetBaanResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetBaan not implemented")
+func (UnimplementedBaanServiceServer) FindOneBaan(context.Context, *FindOneBaanRequest) (*FindOneBaanResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FindOneBaan not implemented")
 }
 
 // UnsafeBaanServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -82,38 +82,38 @@ func RegisterBaanServiceServer(s grpc.ServiceRegistrar, srv BaanServiceServer) {
 	s.RegisterService(&BaanService_ServiceDesc, srv)
 }
 
-func _BaanService_GetAllBaan_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetAllBaanRequest)
+func _BaanService_FindAllBaan_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FindAllBaanRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BaanServiceServer).GetAllBaan(ctx, in)
+		return srv.(BaanServiceServer).FindAllBaan(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/baan.BaanService/GetAllBaan",
+		FullMethod: "/baan.BaanService/FindAllBaan",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BaanServiceServer).GetAllBaan(ctx, req.(*GetAllBaanRequest))
+		return srv.(BaanServiceServer).FindAllBaan(ctx, req.(*FindAllBaanRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _BaanService_GetBaan_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetBaanRequest)
+func _BaanService_FindOneBaan_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FindOneBaanRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BaanServiceServer).GetBaan(ctx, in)
+		return srv.(BaanServiceServer).FindOneBaan(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/baan.BaanService/GetBaan",
+		FullMethod: "/baan.BaanService/FindOneBaan",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BaanServiceServer).GetBaan(ctx, req.(*GetBaanRequest))
+		return srv.(BaanServiceServer).FindOneBaan(ctx, req.(*FindOneBaanRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -126,12 +126,12 @@ var BaanService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*BaanServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetAllBaan",
-			Handler:    _BaanService_GetAllBaan_Handler,
+			MethodName: "FindAllBaan",
+			Handler:    _BaanService_FindAllBaan_Handler,
 		},
 		{
-			MethodName: "GetBaan",
-			Handler:    _BaanService_GetBaan_Handler,
+			MethodName: "FindOneBaan",
+			Handler:    _BaanService_FindOneBaan_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

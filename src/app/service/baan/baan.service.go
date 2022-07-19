@@ -36,7 +36,7 @@ func NewService(repository IRepository, cache ICacheRepository, conf config.App)
 	}
 }
 
-func (s *Service) GetAllBaan(_ context.Context, _ *proto.GetAllBaanRequest) (*proto.GetAllBaanResponse, error) {
+func (s *Service) FindAllBaan(_ context.Context, _ *proto.FindAllBaanRequest) (*proto.FindAllBaanResponse, error) {
 	var baans []*baan.Baan
 	err := s.cache.GetCache(constant.BaanKey, &baans)
 	if err != redis.Nil {
@@ -51,7 +51,7 @@ func (s *Service) GetAllBaan(_ context.Context, _ *proto.GetAllBaanRequest) (*pr
 			return nil, status.Error(codes.Unavailable, "Service is down")
 		}
 
-		return &proto.GetAllBaanResponse{Baans: RawToDtoList(&baans)}, nil
+		return &proto.FindAllBaanResponse{Baans: RawToDtoList(&baans)}, nil
 	}
 
 	err = s.repository.FindAll(&baans)
@@ -77,10 +77,10 @@ func (s *Service) GetAllBaan(_ context.Context, _ *proto.GetAllBaanRequest) (*pr
 		return nil, status.Error(codes.Unavailable, "Service is down")
 	}
 
-	return &proto.GetAllBaanResponse{Baans: RawToDtoList(&baans)}, nil
+	return &proto.FindAllBaanResponse{Baans: RawToDtoList(&baans)}, nil
 }
 
-func (s *Service) GetBaan(_ context.Context, req *proto.GetBaanRequest) (*proto.GetBaanResponse, error) {
+func (s *Service) FindOneBaan(_ context.Context, req *proto.FindOneBaanRequest) (*proto.FindOneBaanResponse, error) {
 	result := baan.Baan{}
 	err := s.cache.GetCache(req.Id, &result)
 	if err != redis.Nil {
@@ -95,7 +95,7 @@ func (s *Service) GetBaan(_ context.Context, req *proto.GetBaanRequest) (*proto.
 			return nil, status.Error(codes.Unavailable, "Service is down")
 		}
 
-		return &proto.GetBaanResponse{Baan: RawToDto(&result)}, nil
+		return &proto.FindOneBaanResponse{Baan: RawToDto(&result)}, nil
 	}
 
 	err = s.repository.FindOne(req.Id, &result)
@@ -122,7 +122,7 @@ func (s *Service) GetBaan(_ context.Context, req *proto.GetBaanRequest) (*proto.
 		return nil, status.Error(codes.Unavailable, "Service is down")
 	}
 
-	return &proto.GetBaanResponse{Baan: RawToDto(&result)}, nil
+	return &proto.FindOneBaanResponse{Baan: RawToDto(&result)}, nil
 }
 
 func RawToDtoList(in *[]*baan.Baan) []*proto.Baan {
@@ -141,10 +141,13 @@ func RawToDto(in *baan.Baan) *proto.Baan {
 		DescriptionTH: in.DescriptionTH,
 		NameEN:        in.NameEN,
 		DescriptionEN: in.DescriptionEN,
-		ImageUrl:      in.ImageUrl,
 		Size:          proto.BaanSize(in.Size),
 		Facebook:      in.Facebook,
+		FacebookUrl:   in.FacebookUrl,
 		Instagram:     in.Instagram,
+		InstagramUrl:  in.InstagramUrl,
 		Line:          in.Line,
+		LineUrl:       in.LineUrl,
+		ImageUrl:      in.ImageUrl,
 	}
 }

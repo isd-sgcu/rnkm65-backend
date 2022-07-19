@@ -49,11 +49,15 @@ func (t *BaanServiceTest) SetupTest() {
 		DescriptionTH: faker.Paragraph(),
 		NameEN:        faker.Word(),
 		DescriptionEN: faker.Paragraph(),
+		ImageUrl:      faker.URL(),
 		Size:          size.M,
 		Facebook:      faker.URL(),
+		FacebookUrl:   faker.URL(),
 		Instagram:     faker.URL(),
+		InstagramUrl:  faker.URL(),
 		Line:          faker.URL(),
-		ImageUrl:      faker.URL(),
+		LineUrl:       faker.URL(),
+		Members:       nil,
 	}
 
 	baan2 := &baan.Baan{
@@ -69,8 +73,11 @@ func (t *BaanServiceTest) SetupTest() {
 		DescriptionEN: faker.Paragraph(),
 		Size:          size.M,
 		Facebook:      faker.URL(),
+		FacebookUrl:   faker.URL(),
 		Instagram:     faker.URL(),
+		InstagramUrl:  faker.URL(),
 		Line:          faker.URL(),
+		LineUrl:       faker.URL(),
 		ImageUrl:      faker.URL(),
 	}
 
@@ -87,8 +94,11 @@ func (t *BaanServiceTest) SetupTest() {
 		DescriptionEN: faker.Paragraph(),
 		Size:          size.M,
 		Facebook:      faker.URL(),
+		FacebookUrl:   faker.URL(),
 		Instagram:     faker.URL(),
+		InstagramUrl:  faker.URL(),
 		Line:          faker.URL(),
+		LineUrl:       faker.URL(),
 		ImageUrl:      faker.URL(),
 	}
 
@@ -100,8 +110,11 @@ func (t *BaanServiceTest) SetupTest() {
 		DescriptionEN: t.baan.DescriptionEN,
 		Size:          proto.BaanSize(t.baan.Size),
 		Facebook:      t.baan.Facebook,
+		FacebookUrl:   t.baan.FacebookUrl,
 		Instagram:     t.baan.Instagram,
+		InstagramUrl:  t.baan.InstagramUrl,
 		Line:          t.baan.Line,
+		LineUrl:       t.baan.LineUrl,
 		ImageUrl:      t.baan.ImageUrl,
 	}
 
@@ -113,8 +126,8 @@ func (t *BaanServiceTest) SetupTest() {
 	}
 }
 
-func (t *BaanServiceTest) TestGetAllBaanSuccess() {
-	want := &proto.GetAllBaanResponse{Baans: createBaanDto(t.baans)}
+func (t *BaanServiceTest) TestFindAllBaanSuccess() {
+	want := &proto.FindAllBaanResponse{Baans: createBaanDto(t.baans)}
 
 	var baansIn []*baan.Baan
 
@@ -128,7 +141,7 @@ func (t *BaanServiceTest) TestGetAllBaanSuccess() {
 	c.On("GetCache", constant.BaanKey, &baansIn).Return(&t.baans, nil)
 
 	srv := NewService(&r, &c, t.conf)
-	actual, err := srv.GetAllBaan(context.Background(), &proto.GetAllBaanRequest{})
+	actual, err := srv.FindAllBaan(context.Background(), &proto.FindAllBaanRequest{})
 
 	assert.Nil(t.T(), err)
 	assert.Equal(t.T(), want, actual)
@@ -146,8 +159,11 @@ func createBaanDto(in []*baan.Baan) []*proto.Baan {
 			DescriptionEN: b.DescriptionEN,
 			Size:          proto.BaanSize(b.Size),
 			Facebook:      b.Facebook,
+			FacebookUrl:   b.FacebookUrl,
 			Instagram:     b.Instagram,
+			InstagramUrl:  b.InstagramUrl,
 			Line:          b.Line,
+			LineUrl:       b.LineUrl,
 			ImageUrl:      b.ImageUrl,
 		}
 
@@ -157,8 +173,8 @@ func createBaanDto(in []*baan.Baan) []*proto.Baan {
 	return result
 }
 
-func (t *BaanServiceTest) TestGetBaanSuccess() {
-	want := &proto.GetBaanResponse{Baan: t.baanDto}
+func (t *BaanServiceTest) TestFindOneBaanSuccess() {
+	want := &proto.FindOneBaanResponse{Baan: t.baanDto}
 
 	r := mock.RepositoryMock{}
 	r.On("FindOne", t.baan.ID.String(), &baan.Baan{}).Return(t.baan, nil)
@@ -169,14 +185,14 @@ func (t *BaanServiceTest) TestGetBaanSuccess() {
 	c.On("GetCache", t.baan.ID.String(), &baan.Baan{}).Return(t.baan, nil)
 
 	srv := NewService(&r, &c, t.conf)
-	actual, err := srv.GetBaan(context.Background(), &proto.GetBaanRequest{Id: t.baan.ID.String()})
+	actual, err := srv.FindOneBaan(context.Background(), &proto.FindOneBaanRequest{Id: t.baan.ID.String()})
 
 	assert.Nil(t.T(), err)
 	assert.Equal(t.T(), want, actual)
 }
 
-func (t *BaanServiceTest) TestGetBaanSuccessNotCache() {
-	want := &proto.GetBaanResponse{Baan: t.baanDto}
+func (t *BaanServiceTest) TestFindOneBaanSuccessNotCache() {
+	want := &proto.FindOneBaanResponse{Baan: t.baanDto}
 
 	r := mock.RepositoryMock{}
 	r.On("FindOne", t.baan.ID.String(), &baan.Baan{}).Return(t.baan, nil)
@@ -188,13 +204,13 @@ func (t *BaanServiceTest) TestGetBaanSuccessNotCache() {
 	c.On("SaveCache", t.baan.ID.String(), t.baan, t.conf.BaanCacheTTL).Return(nil)
 
 	srv := NewService(&r, &c, t.conf)
-	actual, err := srv.GetBaan(context.Background(), &proto.GetBaanRequest{Id: t.baan.ID.String()})
+	actual, err := srv.FindOneBaan(context.Background(), &proto.FindOneBaanRequest{Id: t.baan.ID.String()})
 
 	assert.Nil(t.T(), err)
 	assert.Equal(t.T(), want, actual)
 }
 
-func (t *BaanServiceTest) TestGetBaanNotFound() {
+func (t *BaanServiceTest) TestFindOneBaanNotFound() {
 	r := mock.RepositoryMock{}
 	r.On("FindOne", t.baan.ID.String(), &baan.Baan{}).Return(nil, errors.New("Not found baan"))
 
@@ -204,7 +220,7 @@ func (t *BaanServiceTest) TestGetBaanNotFound() {
 	c.On("GetCache", t.baan.ID.String(), &baan.Baan{}).Return(nil, redis.Nil)
 
 	srv := NewService(&r, &c, t.conf)
-	actual, err := srv.GetBaan(context.Background(), &proto.GetBaanRequest{Id: t.baan.ID.String()})
+	actual, err := srv.FindOneBaan(context.Background(), &proto.FindOneBaanRequest{Id: t.baan.ID.String()})
 
 	st, ok := status.FromError(err)
 	assert.True(t.T(), ok)
