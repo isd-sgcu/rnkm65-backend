@@ -141,6 +141,7 @@ func RawToDto(in *baan.Baan) *proto.Baan {
 		DescriptionTH: in.DescriptionTH,
 		NameEN:        in.NameEN,
 		DescriptionEN: in.DescriptionEN,
+		ImageUrl:      in.ImageUrl,
 		Size:          proto.BaanSize(in.Size),
 		Facebook:      in.Facebook,
 		Instagram:     in.Instagram,

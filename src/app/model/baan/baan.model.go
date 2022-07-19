@@ -12,6 +12,7 @@ type Baan struct {
 	DescriptionTH string        `json:"description_th" gorm:"type:mediumtext"`
 	NameEN        string        `json:"name_en" gorm:"type:tinytext"`
 	DescriptionEN string        `json:"description_en" gorm:"type:mediumtext"`
+	ImageUrl      string        `json:"image_url" gorm:"type:text"`
 	Size          baan.BaanSize `json:"size" gorm:"type:tinyint"`
 	Facebook      string        `json:"facebook" gorm:"type:tinytext"`
 	Instagram     string        `json:"instagram" gorm:"type:tinytext"`

@@ -27,6 +27,7 @@ message Baan{
   string Facebook = 7;
   string Instagram = 8;
   string Line = 9;
+  string ImageUrl = 10;
 }
 
 // Get All Baan

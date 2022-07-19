@@ -53,6 +53,7 @@ func (t *BaanServiceTest) SetupTest() {
 		Facebook:      faker.URL(),
 		Instagram:     faker.URL(),
 		Line:          faker.URL(),
+		ImageUrl:      faker.URL(),
 	}
 
 	baan2 := &baan.Baan{
@@ -70,6 +71,7 @@ func (t *BaanServiceTest) SetupTest() {
 		Facebook:      faker.URL(),
 		Instagram:     faker.URL(),
 		Line:          faker.URL(),
+		ImageUrl:      faker.URL(),
 	}
 
 	baan3 := &baan.Baan{
@@ -87,6 +89,7 @@ func (t *BaanServiceTest) SetupTest() {
 		Facebook:      faker.URL(),
 		Instagram:     faker.URL(),
 		Line:          faker.URL(),
+		ImageUrl:      faker.URL(),
 	}
 
 	t.baanDto = &proto.Baan{
@@ -99,6 +102,7 @@ func (t *BaanServiceTest) SetupTest() {
 		Facebook:      t.baan.Facebook,
 		Instagram:     t.baan.Instagram,
 		Line:          t.baan.Line,
+		ImageUrl:      t.baan.ImageUrl,
 	}
 
 	t.baans = append(t.baans, t.baan, baan2, baan3)
@@ -144,6 +148,7 @@ func createBaanDto(in []*baan.Baan) []*proto.Baan {
 			Facebook:      b.Facebook,
 			Instagram:     b.Instagram,
 			Line:          b.Line,
+			ImageUrl:      b.ImageUrl,
 		}
 
 		result = append(result, r)
