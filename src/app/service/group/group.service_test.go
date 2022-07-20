@@ -1062,6 +1062,7 @@ func (t *GroupServiceTest) TestUpdateBaanSelectionFirstTimeSuccess() {
 	repo.On("RemoveAllBaan", &group.Group{Base: model.Base{ID: t.Group.ID}}).Return(nil)
 
 	userRepo := &mockUser.RepositoryMock{}
+	userRepo.On("FindOne", t.UserMock.ID.String(), &user.User{}).Return(t.UserMock, nil)
 
 	bgsRepo := &mockBgs.RepositoryMock{}
 	bgsRepo.On("SaveBaansSelection", &baansSelection).Return(baansSelection, nil)
@@ -1070,7 +1071,7 @@ func (t *GroupServiceTest) TestUpdateBaanSelectionFirstTimeSuccess() {
 
 	srv := NewService(repo, userRepo, bgsRepo, fileSrv, t.conf)
 
-	actual, err := srv.SelectBaan(context.Background(), &proto.SelectBaanRequest{GroupId: t.GroupDto.Id, Baans: baanIds})
+	actual, err := srv.SelectBaan(context.Background(), &proto.SelectBaanRequest{UserId: t.UserMock.ID.String(), Baans: baanIds})
 
 	assert.Nil(t.T(), err)
 	assert.Equal(t.T(), want, actual)
@@ -1083,6 +1084,7 @@ func (t *GroupServiceTest) TestUpdateBaanSelectionNotFoundGroup() {
 	repo.On("FindGroupWithBaans", t.GroupDto.Id, &group.Group{}).Return(nil, errors.New("Not found group"))
 
 	userRepo := &mockUser.RepositoryMock{}
+	userRepo.On("FindOne", t.UserMock.ID.String(), &user.User{}).Return(t.UserMock, nil)
 
 	bgsRepo := &mockBgs.RepositoryMock{}
 
@@ -1090,7 +1092,7 @@ func (t *GroupServiceTest) TestUpdateBaanSelectionNotFoundGroup() {
 
 	srv := NewService(repo, userRepo, bgsRepo, fileSrv, t.conf)
 
-	actual, err := srv.SelectBaan(context.Background(), &proto.SelectBaanRequest{GroupId: t.GroupDto.Id, Baans: baanIds})
+	actual, err := srv.SelectBaan(context.Background(), &proto.SelectBaanRequest{UserId: t.UserMock.ID.String(), Baans: baanIds})
 
 	st, ok := status.FromError(err)
 
@@ -1113,7 +1115,7 @@ func (t *GroupServiceTest) TestUpdateBaanSelectionDuplicatedBaan() {
 
 	srv := NewService(repo, userRepo, bgsRepo, fileSrv, t.conf)
 
-	actual, err := srv.SelectBaan(context.Background(), &proto.SelectBaanRequest{GroupId: t.GroupDto.Id, Baans: baanIds})
+	actual, err := srv.SelectBaan(context.Background(), &proto.SelectBaanRequest{UserId: t.UserMock.ID.String(), Baans: baanIds})
 
 	st, ok := status.FromError(err)
 
@@ -1123,12 +1125,12 @@ func (t *GroupServiceTest) TestUpdateBaanSelectionDuplicatedBaan() {
 }
 
 func (t *GroupServiceTest) TestUpdateBaanSelectionInvalidNumberOfBaan() {
-	testUpdateBaanSelectionInvalidNumberOfBaan(t.T(), t.GroupDto.Id, []string{}, t.conf)
-	testUpdateBaanSelectionInvalidNumberOfBaan(t.T(), t.GroupDto.Id, []string{"1", "2"}, t.conf)
-	testUpdateBaanSelectionInvalidNumberOfBaan(t.T(), t.GroupDto.Id, []string{"1", "2", "3", "4"}, t.conf)
+	testUpdateBaanSelectionInvalidNumberOfBaan(t.T(), t.UserMock.ID.String(), []string{}, t.conf)
+	testUpdateBaanSelectionInvalidNumberOfBaan(t.T(), t.UserMock.ID.String(), []string{"1", "2"}, t.conf)
+	testUpdateBaanSelectionInvalidNumberOfBaan(t.T(), t.UserMock.ID.String(), []string{"1", "2", "3", "4"}, t.conf)
 }
 
-func testUpdateBaanSelectionInvalidNumberOfBaan(t *testing.T, groupId string, baanIds []string, conf config.App) {
+func testUpdateBaanSelectionInvalidNumberOfBaan(t *testing.T, userId string, baanIds []string, conf config.App) {
 	repo := &mock.RepositoryMock{}
 
 	userRepo := &mockUser.RepositoryMock{}
@@ -1139,7 +1141,7 @@ func testUpdateBaanSelectionInvalidNumberOfBaan(t *testing.T, groupId string, ba
 
 	srv := NewService(repo, userRepo, bgsRepo, fileSrv, conf)
 
-	actual, err := srv.SelectBaan(context.Background(), &proto.SelectBaanRequest{GroupId: groupId, Baans: baanIds})
+	actual, err := srv.SelectBaan(context.Background(), &proto.SelectBaanRequest{UserId: userId, Baans: baanIds})
 
 	st, ok := status.FromError(err)
 

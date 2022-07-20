@@ -491,7 +491,7 @@ func (s *Service) SelectBaan(_ context.Context, req *proto.SelectBaanRequest) (r
 		log.Error().
 			Str("service", "group").
 			Str("module", "select baan").
-			Str("group_id", req.GroupId).
+			Str("user_id", req.UserId).
 			Msg("Invalid number of baan")
 		return nil, status.Error(codes.InvalidArgument, "invalid numbers of baan")
 	}
@@ -500,26 +500,31 @@ func (s *Service) SelectBaan(_ context.Context, req *proto.SelectBaanRequest) (r
 		log.Error().
 			Str("service", "group").
 			Str("module", "select baan").
-			Str("group_id", req.GroupId).
+			Str("user_id", req.UserId).
 			Msg("Duplicated baan")
 		return nil, status.Error(codes.InvalidArgument, "duplicated baan")
 	}
 
+	leader := &user.User{}
+	err = s.userRepo.FindOne(req.UserId, leader)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "Not found user")
+	}
+
 	result := &group.Group{}
-	err = s.repo.FindGroupWithBaans(req.GroupId, result)
+	err = s.repo.FindGroupWithBaans(leader.GroupID.String(), result)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "Not found group")
 	}
 
-	gId, err := uuid.Parse(req.GroupId)
-	if err != nil {
+	if leader.ID.String() != result.LeaderID {
 		log.Error().
 			Err(err).
 			Str("service", "group").
 			Str("module", "select baan").
-			Str("group_id", req.GroupId).
-			Msg("Duplicated baan")
-		return nil, status.Error(codes.Internal, "Cannot parse group id to int")
+			Str("user_id", req.UserId).
+			Msg("Forbidden action not leader select baan")
+		return nil, status.Error(codes.PermissionDenied, "Insufficiency permission")
 	}
 
 	var baanSelections []*baan_group_selection.BaanGroupSelection
@@ -530,27 +535,27 @@ func (s *Service) SelectBaan(_ context.Context, req *proto.SelectBaanRequest) (r
 				Err(err).
 				Str("service", "group").
 				Str("module", "select baan").
-				Str("group_id", req.GroupId).
+				Str("user_id", req.UserId).
 				Msg("Duplicated baan")
 			return nil, status.Error(codes.Internal, "Cannot parse group id to int")
 		}
 
 		baanSelect := baan_group_selection.BaanGroupSelection{
 			BaanID:  &bId,
-			GroupID: &gId,
+			GroupID: &result.ID,
 			Order:   i + 1,
 		}
 
 		baanSelections = append(baanSelections, &baanSelect)
 	}
 
-	err = s.repo.RemoveAllBaan(&group.Group{Base: model.Base{ID: gId}})
+	err = s.repo.RemoveAllBaan(&group.Group{Base: model.Base{ID: result.ID}})
 	if err != nil {
 		log.Error().
 			Err(err).
 			Str("service", "group").
 			Str("module", "select baan").
-			Str("group_id", req.GroupId).
+			Str("user_id", req.UserId).
 			Msg("Error while clearing the baan selection")
 		return nil, status.Error(codes.Internal, "Error while clearing the baan selection")
 	}
@@ -561,7 +566,7 @@ func (s *Service) SelectBaan(_ context.Context, req *proto.SelectBaanRequest) (r
 			Err(err).
 			Str("service", "group").
 			Str("module", "select baan").
-			Str("group_id", req.GroupId).
+			Str("user_id", req.UserId).
 			Msg("Error while updating the baan selection")
 		return nil, status.Error(codes.Internal, "Error while updating the baan selection")
 	}
@@ -569,7 +574,7 @@ func (s *Service) SelectBaan(_ context.Context, req *proto.SelectBaanRequest) (r
 	log.Info().
 		Str("service", "group").
 		Str("module", "select baan").
-		Str("group_id", req.GroupId).
+		Str("user_id", req.UserId).
 		Msg("Successfully update baan selection")
 
 	return &proto.SelectBaanResponse{Success: true}, nil

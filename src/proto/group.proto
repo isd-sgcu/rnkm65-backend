@@ -95,7 +95,7 @@ message LeaveGroupResponse{
 // Select Baan
 
 message SelectBaanRequest{
-  string groupId = 1;
+  string userId = 1;
   repeated string baans = 2;
 }
 
