@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package user;
+
+option go_package = "src/proto";
+
+service CheckinService {
+  rpc Checkin(CheckinRequest) returns (CheckinResponse){}
+}
+
+// Checkin
+
+message CheckinRequest{
+  string id = 1;
+}
+
+message CheckinResponse{
+  bool success = 1;
+}

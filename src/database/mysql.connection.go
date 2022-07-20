@@ -5,6 +5,7 @@ import (
 	"github.com/isd-sgcu/rnkm65-backend/src/app/model/baan"
 	baan_group "github.com/isd-sgcu/rnkm65-backend/src/app/model/baan-group-selection"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/model/group"
+	"github.com/isd-sgcu/rnkm65-backend/src/app/model/baan"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/model/user"
 	"github.com/isd-sgcu/rnkm65-backend/src/config"
 	"gorm.io/driver/mysql"
