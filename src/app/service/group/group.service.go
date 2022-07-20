@@ -4,9 +4,11 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/model"
+	baan_group_selection "github.com/isd-sgcu/rnkm65-backend/src/app/model/baan-group-selection"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/model/group"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/model/user"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/utils"
+	"github.com/isd-sgcu/rnkm65-backend/src/config"
 	"github.com/isd-sgcu/rnkm65-backend/src/proto"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
@@ -16,17 +18,25 @@ import (
 )
 
 type Service struct {
-	repo     IRepository
-	userRepo IUserRepository
-	fileSrv  IFileService
+	repo               IRepository
+	userRepo           IUserRepository
+	fileSrv            IFileService
+	conf               config.App
+	baanGroupSelection IBaanGroupSelectRepository
 }
 
 type IRepository interface {
 	FindGroupByToken(string, *group.Group) error
 	FindGroupById(string, *group.Group) error
+	FindGroupWithBaans(string, *group.Group) error
 	Create(*group.Group) error
 	UpdateWithLeader(string, *group.Group) error
+	RemoveAllBaan(g *group.Group) error
 	Delete(string) error
+}
+
+type IBaanGroupSelectRepository interface {
+	SaveBaansSelection(*[]*baan_group_selection.BaanGroupSelection) error
 }
 
 type IUserRepository interface {
@@ -34,12 +44,18 @@ type IUserRepository interface {
 	Update(string, *user.User) error
 }
 
-type IFileService interface {
-	GetSignedUrl(string) (string, error)
+func NewService(repo IRepository, userRepo IUserRepository, baanGroupSelectionRepo IBaanGroupSelectRepository, fileSrv IFileService, conf config.App) *Service {
+	return &Service{
+		repo:               repo,
+		userRepo:           userRepo,
+		fileSrv:            fileSrv,
+		baanGroupSelection: baanGroupSelectionRepo,
+		conf:               conf,
+	}
 }
 
-func NewService(repo IRepository, userRepo IUserRepository, fileSrv IFileService) *Service {
-	return &Service{repo: repo, userRepo: userRepo, fileSrv: fileSrv}
+type IFileService interface {
+	GetSignedUrl(string) (string, error)
 }
 
 func (s *Service) FindOne(_ context.Context, req *proto.FindOneGroupRequest) (res *proto.FindOneGroupResponse, err error) {
@@ -468,6 +484,95 @@ func (s *Service) Leave(_ context.Context, req *proto.LeaveGroupRequest) (res *p
 		Str("student_id", leavedUser.StudentID).
 		Msg("Leave group success")
 	return &proto.LeaveGroupResponse{Group: grpDto}, nil
+}
+
+func (s *Service) SelectBaan(_ context.Context, req *proto.SelectBaanRequest) (res *proto.SelectBaanResponse, err error) {
+	if len(req.Baans) != s.conf.NBaan {
+		log.Error().
+			Str("service", "group").
+			Str("module", "select baan").
+			Str("group_id", req.GroupId).
+			Msg("Invalid number of baan")
+		return nil, status.Error(codes.InvalidArgument, "invalid numbers of baan")
+	}
+
+	if utils.IsDuplicatedString(req.Baans) {
+		log.Error().
+			Str("service", "group").
+			Str("module", "select baan").
+			Str("group_id", req.GroupId).
+			Msg("Duplicated baan")
+		return nil, status.Error(codes.InvalidArgument, "duplicated baan")
+	}
+
+	result := &group.Group{}
+	err = s.repo.FindGroupWithBaans(req.GroupId, result)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "Not found group")
+	}
+
+	gId, err := uuid.Parse(req.GroupId)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("service", "group").
+			Str("module", "select baan").
+			Str("group_id", req.GroupId).
+			Msg("Duplicated baan")
+		return nil, status.Error(codes.Internal, "Cannot parse group id to int")
+	}
+
+	var baanSelections []*baan_group_selection.BaanGroupSelection
+	for i, bId := range req.Baans {
+		bId, err := uuid.Parse(bId)
+		if err != nil {
+			log.Error().
+				Err(err).
+				Str("service", "group").
+				Str("module", "select baan").
+				Str("group_id", req.GroupId).
+				Msg("Duplicated baan")
+			return nil, status.Error(codes.Internal, "Cannot parse group id to int")
+		}
+
+		baanSelect := baan_group_selection.BaanGroupSelection{
+			BaanID:  &bId,
+			GroupID: &gId,
+			Order:   i + 1,
+		}
+
+		baanSelections = append(baanSelections, &baanSelect)
+	}
+
+	err = s.repo.RemoveAllBaan(&group.Group{Base: model.Base{ID: gId}})
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("service", "group").
+			Str("module", "select baan").
+			Str("group_id", req.GroupId).
+			Msg("Error while clearing the baan selection")
+		return nil, status.Error(codes.Internal, "Error while clearing the baan selection")
+	}
+
+	err = s.baanGroupSelection.SaveBaansSelection(&baanSelections)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("service", "group").
+			Str("module", "select baan").
+			Str("group_id", req.GroupId).
+			Msg("Error while updating the baan selection")
+		return nil, status.Error(codes.Internal, "Error while updating the baan selection")
+	}
+
+	log.Info().
+		Str("service", "group").
+		Str("module", "select baan").
+		Str("group_id", req.GroupId).
+		Msg("Successfully update baan selection")
+
+	return &proto.SelectBaanResponse{Success: true}, nil
 }
 
 func DtoToRaw(in *proto.Group) (result *group.Group, err error) {
