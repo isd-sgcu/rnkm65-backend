@@ -185,8 +185,8 @@ func (s *Service) FindByToken(_ context.Context, req *proto.FindByTokenGroupRequ
 		Token: raw.Token,
 		Leader: &proto.UserInfo{
 			Id:        usr.ID.String(),
-			FirstName: usr.Firstname,
-			LastName:  usr.Lastname,
+			Firstname: usr.Firstname,
+			Lastname:  usr.Lastname,
 			ImageUrl:  leaderUrl,
 		},
 	}, nil
@@ -590,8 +590,8 @@ func DtoToRaw(in *proto.Group) (result *group.Group, err error) {
 				UpdatedAt: time.Time{},
 				DeletedAt: gorm.DeletedAt{},
 			},
-			Firstname: usr.FirstName,
-			Lastname:  usr.LastName,
+			Firstname: usr.Firstname,
+			Lastname:  usr.Lastname,
 		}
 		members = append(members, newUser)
 	}
@@ -639,8 +639,8 @@ func (s *Service) GetMembersImages(users []*user.User) (result []*proto.UserInfo
 		}
 		newUser := &proto.UserInfo{
 			Id:        usr.ID.String(),
-			FirstName: usr.Firstname,
-			LastName:  usr.Lastname,
+			Firstname: usr.Firstname,
+			Lastname:  usr.Lastname,
 			ImageUrl:  url,
 		}
 		members = append(members, newUser)

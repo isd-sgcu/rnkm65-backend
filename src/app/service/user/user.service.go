@@ -122,7 +122,6 @@ func (s *Service) CreateOrUpdate(_ context.Context, req *proto.CreateOrUpdateUse
 	if err != nil {
 		log.Error().Err(err).
 			Str("module", "create or update").
-			Str("student_id", raw.StudentID).
 			Msg("Error while mapping dto to raw")
 		return nil, status.Error(codes.InvalidArgument, "invalid user id")
 	}

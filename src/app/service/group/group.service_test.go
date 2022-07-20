@@ -72,8 +72,8 @@ func (t *GroupServiceTest) SetupTest() {
 	}
 	t.UserDtoMock = &proto.UserInfo{
 		Id:        t.UserMock.ID.String(),
-		FirstName: t.UserMock.Firstname,
-		LastName:  t.UserMock.Lastname,
+		Firstname: t.UserMock.Firstname,
+		Lastname:  t.UserMock.Lastname,
 		ImageUrl:  "",
 	}
 	t.Group = &group.Group{
@@ -328,8 +328,8 @@ func (t *GroupServiceTest) TestFindByTokenSuccess() {
 		Token: t.Group.Token,
 		Leader: &proto.UserInfo{
 			Id:        t.Group.LeaderID,
-			FirstName: t.UserMock.Firstname,
-			LastName:  t.UserMock.Lastname,
+			Firstname: t.UserMock.Firstname,
+			Lastname:  t.UserMock.Lastname,
 			ImageUrl:  "",
 		},
 	}
@@ -542,8 +542,8 @@ func (t *GroupServiceTest) TestJoinSuccess1() {
 func (t *GroupServiceTest) TestJoinSuccess2() {
 	headUserDto := &proto.UserInfo{
 		Id:        t.ReservedUser.ID.String(),
-		FirstName: t.ReservedUser.Firstname,
-		LastName:  t.ReservedUser.Lastname,
+		Firstname: t.ReservedUser.Firstname,
+		Lastname:  t.ReservedUser.Lastname,
 		ImageUrl:  "",
 	}
 
@@ -901,8 +901,8 @@ func (t *GroupServiceTest) TestLeaveGroupSuccess() {
 	}
 	updatedUserDto := &proto.UserInfo{
 		Id:        updatedUser.ID.String(),
-		FirstName: updatedUser.Firstname,
-		LastName:  updatedUser.Lastname,
+		Firstname: updatedUser.Firstname,
+		Lastname:  updatedUser.Lastname,
 		ImageUrl:  "",
 	}
 

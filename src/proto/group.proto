@@ -23,8 +23,8 @@ message Group{
 
 message UserInfo {
   string id = 1;
-  string firstName = 2;
-  string lastName = 3;
+  string firstname = 2;
+  string lastname = 3;
   string imageUrl = 4;
 }
 
