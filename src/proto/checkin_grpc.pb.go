@@ -22,7 +22,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CheckinServiceClient interface {
-	Checkin(ctx context.Context, in *CheckInRequest, opts ...grpc.CallOption) (*CheckinResponse, error)
+	CheckinVerify(ctx context.Context, in *CheckinVerifyRequest, opts ...grpc.CallOption) (*CheckinVerifyResponse, error)
+	CheckinConfirm(ctx context.Context, in *CheckinConfirmRequest, opts ...grpc.CallOption) (*CheckinConfirmResponse, error)
 }
 
 type checkinServiceClient struct {
@@ -33,9 +34,18 @@ func NewCheckinServiceClient(cc grpc.ClientConnInterface) CheckinServiceClient {
 	return &checkinServiceClient{cc}
 }
 
-func (c *checkinServiceClient) Checkin(ctx context.Context, in *CheckInRequest, opts ...grpc.CallOption) (*CheckinResponse, error) {
-	out := new(CheckinResponse)
-	err := c.cc.Invoke(ctx, "/user.CheckinService/Checkin", in, out, opts...)
+func (c *checkinServiceClient) CheckinVerify(ctx context.Context, in *CheckinVerifyRequest, opts ...grpc.CallOption) (*CheckinVerifyResponse, error) {
+	out := new(CheckinVerifyResponse)
+	err := c.cc.Invoke(ctx, "/user.CheckinService/CheckinVerify", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *checkinServiceClient) CheckinConfirm(ctx context.Context, in *CheckinConfirmRequest, opts ...grpc.CallOption) (*CheckinConfirmResponse, error) {
+	out := new(CheckinConfirmResponse)
+	err := c.cc.Invoke(ctx, "/user.CheckinService/CheckinConfirm", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -46,15 +56,19 @@ func (c *checkinServiceClient) Checkin(ctx context.Context, in *CheckInRequest, 
 // All implementations should embed UnimplementedCheckinServiceServer
 // for forward compatibility
 type CheckinServiceServer interface {
-	Checkin(context.Context, *CheckInRequest) (*CheckinResponse, error)
+	CheckinVerify(context.Context, *CheckinVerifyRequest) (*CheckinVerifyResponse, error)
+	CheckinConfirm(context.Context, *CheckinConfirmRequest) (*CheckinConfirmResponse, error)
 }
 
 // UnimplementedCheckinServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedCheckinServiceServer struct {
 }
 
-func (UnimplementedCheckinServiceServer) Checkin(context.Context, *CheckInRequest) (*CheckinResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Checkin not implemented")
+func (UnimplementedCheckinServiceServer) CheckinVerify(context.Context, *CheckinVerifyRequest) (*CheckinVerifyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckinVerify not implemented")
+}
+func (UnimplementedCheckinServiceServer) CheckinConfirm(context.Context, *CheckinConfirmRequest) (*CheckinConfirmResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckinConfirm not implemented")
 }
 
 // UnsafeCheckinServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -68,20 +82,38 @@ func RegisterCheckinServiceServer(s grpc.ServiceRegistrar, srv CheckinServiceSer
 	s.RegisterService(&CheckinService_ServiceDesc, srv)
 }
 
-func _CheckinService_Checkin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CheckInRequest)
+func _CheckinService_CheckinVerify_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckinVerifyRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CheckinServiceServer).Checkin(ctx, in)
+		return srv.(CheckinServiceServer).CheckinVerify(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/user.CheckinService/Checkin",
+		FullMethod: "/user.CheckinService/CheckinVerify",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CheckinServiceServer).Checkin(ctx, req.(*CheckInRequest))
+		return srv.(CheckinServiceServer).CheckinVerify(ctx, req.(*CheckinVerifyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CheckinService_CheckinConfirm_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckinConfirmRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CheckinServiceServer).CheckinConfirm(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/user.CheckinService/CheckinConfirm",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CheckinServiceServer).CheckinConfirm(ctx, req.(*CheckinConfirmRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -94,8 +126,12 @@ var CheckinService_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*CheckinServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Checkin",
-			Handler:    _CheckinService_Checkin_Handler,
+			MethodName: "CheckinVerify",
+			Handler:    _CheckinService_CheckinVerify_Handler,
+		},
+		{
+			MethodName: "CheckinConfirm",
+			Handler:    _CheckinService_CheckinConfirm_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

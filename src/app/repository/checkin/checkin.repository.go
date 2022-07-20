@@ -18,3 +18,11 @@ func NewRepository(db *gorm.DB) *Repository {
 func (r *Repository) Checkin(ci *checkin.Checkin) error {
 	return r.db.Create(ci).Error
 }
+
+func (r *Repository) Checkout(ci *checkin.Checkin) error {
+	return r.db.Where("user_id = ? AND event_type = ? AND checkout_at IS NULL", ci.UserId, ci.EventType).Updates(ci).Error
+}
+
+func (r *Repository) FindLastCheckin(userid string, eventType int32, result *checkin.Checkin) error {
+	return r.db.Where("user_id = ? AND event_type = ?", userid, eventType).First(result).Error
+}

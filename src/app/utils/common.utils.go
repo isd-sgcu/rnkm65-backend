@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 )
 
@@ -24,4 +26,9 @@ func IsDuplicatedString(in []string) bool {
 	}
 
 	return false
+}
+
+func GetCurrentTimePtr() *time.Time {
+	tmp := time.Now()
+	return &tmp
 }

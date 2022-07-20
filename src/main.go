@@ -162,7 +162,7 @@ func main() {
 	usrSvc := us.NewService(usrRepo, fileSrv)
 
 	ciRepo := cir.NewRepository(db)
-	ciSvc := csr.NewService(ciRepo)
+	ciSvc := csr.NewService(ciRepo, cacheRepo, conf.App)
 
 	baRepo := bRepo.NewRepository(db)
 	baSrv := bSrv.NewService(baRepo, cacheRepo, conf.App)
