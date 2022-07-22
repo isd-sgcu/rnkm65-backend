@@ -25,8 +25,10 @@ type Database struct {
 }
 
 type App struct {
-	Port  int  `mapstructure:"port"`
-	Debug bool `mapstructure:"debug"`
+	Port         int  `mapstructure:"port"`
+	Debug        bool `mapstructure:"debug"`
+	BaanCacheTTL int  `mapstructure:"baan_cache_ttl"`
+	NBaan        int  `mapstructure:"number_of_baan"`
 }
 
 type Config struct {
