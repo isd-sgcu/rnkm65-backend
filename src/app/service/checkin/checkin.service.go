@@ -40,7 +40,7 @@ func NewService(repo IRepository, cache ICacheRepository, conf config.App) *Serv
 
 func (s *Service) CheckinVerify(_ context.Context, req *proto.CheckinVerifyRequest) (*proto.CheckinVerifyResponse, error) {
 	ciToken := &checkin.CheckinToken{}
-	err := s.cache.GetCache(req.Id, ciToken)
+	err := s.cache.GetCache(utils.GetCacheKey(req.Id, req.EventType), ciToken)
 
 	if err != redis.Nil {
 		return &proto.CheckinVerifyResponse{
@@ -86,7 +86,7 @@ func (s *Service) CheckinVerify(_ context.Context, req *proto.CheckinVerifyReque
 		EventType:   req.EventType,
 	}, 60)
 
-	s.cache.SaveCache(req.Id, &checkin.CheckinToken{
+	s.cache.SaveCache(utils.GetCacheKey(req.Id, req.EventType), &checkin.CheckinToken{
 		Token:       token,
 		UserId:      req.Id,
 		CheckinType: checkinType,
@@ -110,7 +110,7 @@ func (s *Service) CheckinConfirm(_ context.Context, req *proto.CheckinConfirmReq
 	}
 
 	defer func() {
-		if err := s.cache.RemoveCache(cached.Id); err != nil {
+		if err := s.cache.RemoveCache(utils.GetCacheKey(cached.Id, cached.EventType)); err != nil {
 			log.Error().Err(err).
 				Str("service", "Checkin").
 				Str("module", "checkin confirm").
