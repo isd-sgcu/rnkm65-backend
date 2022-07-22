@@ -109,12 +109,30 @@ func (s *Service) CheckinConfirm(_ context.Context, req *proto.CheckinConfirmReq
 		return nil, status.Error(codes.Unauthenticated, "Invalid token")
 	}
 
+	defer func() {
+		if err := s.cache.RemoveCache(cached.Id); err != nil {
+			log.Error().Err(err).
+				Str("service", "Checkin").
+				Str("module", "checkin confirm").
+				Msg("Error while removing user cache")
+		}
+	}()
+
+	defer func() {
+		if err := s.cache.RemoveCache(req.Token); err != nil {
+			log.Error().Err(err).
+				Str("service", "Checkin").
+				Str("module", "checkin confirm").
+				Msg("Error while removing token cache")
+		}
+	}()
+
 	switch cached.CheckinType {
 	case "check_in":
 		ci := newCheckin(cached.Id, cached.EventType)
 		err = s.repo.Checkin(ci)
 	case "check_out":
-		ci := newCheckout(cached.Id)
+		ci := newCheckout(cached.Id, cached.EventType)
 		err = s.repo.Checkout(ci)
 	default:
 		return nil, status.Error(codes.InvalidArgument, "Invalid checkin type")
@@ -124,24 +142,8 @@ func (s *Service) CheckinConfirm(_ context.Context, req *proto.CheckinConfirmReq
 		log.Error().Err(err).
 			Str("service", "Checkin").
 			Str("module", "checkin confirm").
-			Msg("Error while Checkin")
+			Msg("Error while Checkin, Possibly due to invalid user-uuid")
 
-		return nil, status.Error(codes.Internal, "Internal Error")
-	}
-
-	if err := s.cache.RemoveCache(cached.Id); err != nil {
-		log.Error().Err(err).
-			Str("service", "Checkin").
-			Str("module", "checkin confirm").
-			Msg("Error while removing cache")
-		return nil, status.Error(codes.Internal, "Internal Error")
-	}
-
-	if err := s.cache.RemoveCache(req.Token); err != nil {
-		log.Error().Err(err).
-			Str("service", "Checkin").
-			Str("module", "checkin confirm").
-			Msg("Error while removing cache")
 		return nil, status.Error(codes.Internal, "Internal Error")
 	}
 
@@ -157,9 +159,10 @@ func newCheckin(userid string, eventType int32) *checkin.Checkin {
 	}
 }
 
-func newCheckout(userid string) *checkin.Checkin {
+func newCheckout(userid string, eventType int32) *checkin.Checkin {
 	return &checkin.Checkin{
 		UserId:     userid,
 		CheckoutAt: utils.GetCurrentTimePtr(),
+		EventType:  eventType,
 	}
 }

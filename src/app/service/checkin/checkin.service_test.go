@@ -2,6 +2,7 @@ package checkin
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/go-redis/redis/v8"
@@ -237,6 +238,37 @@ func (t *CheckinServiceTest) TestCheckoutConfirmSuccess() {
 
 	assert.Nil(t.T(), err)
 	assert.Equal(t.T(), want, actual)
+}
+
+func (t *CheckinServiceTest) TestCheckinConfirmInvalidUserId() {
+	req := &proto.CheckinConfirmRequest{
+		Token: t.Token,
+	}
+
+	randomUUID := uuid.New().String()
+
+	repo := &rmock.RepositoryMock{}
+
+	ci := newCheckin(randomUUID, t.Ci.EventType)
+
+	repo.On("Checkin", ci).Return(errors.New("Error 1452: Cannot add or update a child row: a foreign key constraint fails"))
+
+	cr := newCacheMock()
+	cr.On("GetCache", t.Token, &checkin.TokenInfo{}).Return(&checkin.TokenInfo{
+		Id:          randomUUID,
+		CheckinType: "check_in",
+		EventType:   t.Ci.EventType,
+	}, nil)
+
+	service := NewService(repo, cr, t.Conf)
+
+	actual, err := service.CheckinConfirm(context.Background(), req)
+
+	st, ok := status.FromError(err)
+
+	assert.True(t.T(), ok)
+	assert.Nil(t.T(), actual)
+	assert.Equal(t.T(), codes.Internal, st.Code())
 }
 
 func newCacheMock() *cmock.RepositoryMock {

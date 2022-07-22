@@ -24,5 +24,5 @@ func (r *Repository) Checkout(ci *checkin.Checkin) error {
 }
 
 func (r *Repository) FindLastCheckin(userid string, eventType int32, result *checkin.Checkin) error {
-	return r.db.Where("user_id = ? AND event_type = ?", userid, eventType).First(result).Error
+	return r.db.Where("user_id = ? AND event_type = ?", userid, eventType).Order("checkin_at DESC").Last(result).Error
 }
