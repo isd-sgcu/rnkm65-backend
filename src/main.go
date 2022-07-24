@@ -4,11 +4,13 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	evtRepo "github.com/isd-sgcu/rnkm65-backend/src/app/repository/event"
 	bRepo "github.com/isd-sgcu/rnkm65-backend/src/app/repository/baan"
 	bgsRepo "github.com/isd-sgcu/rnkm65-backend/src/app/repository/baan-group-selection"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/repository/cache"
 	grpRepo "github.com/isd-sgcu/rnkm65-backend/src/app/repository/group"
 	ur "github.com/isd-sgcu/rnkm65-backend/src/app/repository/user"
+	evtService "github.com/isd-sgcu/rnkm65-backend/src/app/service/event"
 	bSrv "github.com/isd-sgcu/rnkm65-backend/src/app/service/baan"
 	fSrv "github.com/isd-sgcu/rnkm65-backend/src/app/service/file"
 	grpService "github.com/isd-sgcu/rnkm65-backend/src/app/service/group"
@@ -24,12 +26,6 @@ import (
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 	"gorm.io/gorm"
-	"net"
-	"os"
-	"os/signal"
-	"sync"
-	"syscall"
-	"time"
 )
 
 func handleArgs(db *gorm.DB) {
@@ -167,11 +163,15 @@ func main() {
 	groupRepo := grpRepo.NewRepository(db)
 	grpSvc := grpService.NewService(groupRepo, usrRepo, baGrpSetRepo, fileSrv, cacheRepo, baRepo, conf.App)
 
+	eventRepo := evtRepo.NewRepository(db)
+	evtSvc := evtService.NewService(eventRepo)
+
 	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
 	proto.RegisterUserServiceServer(grpcServer, usrSvc)
 	proto.RegisterBaanServiceServer(grpcServer, baSrv)
 	proto.RegisterGroupServiceServer(grpcServer, grpSvc)
 
+	proto.RegisterEventServiceServer(grpcServer, evtSvc)
 	reflection.Register(grpcServer)
 	go func() {
 		log.Info().
