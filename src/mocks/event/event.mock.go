@@ -9,7 +9,17 @@ type RepositoryMock struct {
 	mock.Mock
 }
 
-func (r *RepositoryMock) FindByEventID(id string, result *event.Event) error {
+func (r *RepositoryMock) FindAllEvent(result *[]*event.Event) error {
+	args := r.Called(result)
+
+	if args.Get(0) != nil {
+		*result = args.Get(0).([]*event.Event)
+	}
+
+	return args.Error(1)
+}
+
+func (r *RepositoryMock) FindEventByID(id string, result *event.Event) error {
 	args := r.Called(id, result)
 
 	if args.Get(0) != nil {

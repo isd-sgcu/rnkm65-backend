@@ -13,7 +13,7 @@ func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db: db}
 }
 
-func (r *Repository) FindAll(result *[]*event.Event) error {
+func (r *Repository) FindAllEvent(result *[]*event.Event) error {
 	return r.db.Model(&event.Event{}).Find(result).Error
 }
 
