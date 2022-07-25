@@ -14,6 +14,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
+
+	cst "github.com/isd-sgcu/rnkm65-backend/src/constant/checkin"
 )
 
 type IRepository interface {
@@ -52,7 +54,7 @@ func (s *Service) CheckinVerify(_ context.Context, req *proto.CheckinVerifyReque
 	ci := &checkin.Checkin{}
 	err = s.repo.FindLastCheckin(req.Id, req.EventType, ci)
 
-	var checkinType string
+	var checkinType int32
 
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Error().
@@ -61,10 +63,12 @@ func (s *Service) CheckinVerify(_ context.Context, req *proto.CheckinVerifyReque
 			Str("module", "checkinverify").
 			Msg("Unknown db error")
 		return nil, status.Error(codes.Internal, "Internal Server Error")
-	} else if errors.Is(err, gorm.ErrRecordNotFound) || ci.CheckoutAt != nil {
-		checkinType = "check_in"
+	}
+
+	if ci.CheckinAt != nil && ci.CheckoutAt == nil {
+		checkinType = cst.CHECKOUT
 	} else {
-		checkinType = "check_out"
+		checkinType = cst.CHECKIN
 	}
 
 	_token, err := uuid.NewUUID()
@@ -84,13 +88,13 @@ func (s *Service) CheckinVerify(_ context.Context, req *proto.CheckinVerifyReque
 		Id:          req.Id,
 		CheckinType: checkinType,
 		EventType:   req.EventType,
-	}, 60)
+	}, s.conf.CICacheTTL)
 
 	s.cache.SaveCache(utils.GetCacheKey(req.Id, req.EventType), &checkin.CheckinToken{
 		Token:       token,
 		UserId:      req.Id,
 		CheckinType: checkinType,
-	}, 60)
+	}, s.conf.CICacheTTL)
 
 	res := &proto.CheckinVerifyResponse{
 		CheckinToken: token,
@@ -128,10 +132,10 @@ func (s *Service) CheckinConfirm(_ context.Context, req *proto.CheckinConfirmReq
 	}()
 
 	switch cached.CheckinType {
-	case "check_in":
+	case cst.CHECKIN:
 		ci := newCheckin(cached.Id, cached.EventType)
 		err = s.repo.Checkin(ci)
-	case "check_out":
+	case cst.CHECKOUT:
 		ci := newCheckout(cached.Id, cached.EventType)
 		err = s.repo.Checkout(ci)
 	default:

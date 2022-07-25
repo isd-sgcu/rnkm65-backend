@@ -10,6 +10,7 @@ import (
 	"github.com/isd-sgcu/rnkm65-backend/src/app/model/checkin"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/utils"
 	"github.com/isd-sgcu/rnkm65-backend/src/config"
+	cst "github.com/isd-sgcu/rnkm65-backend/src/constant/checkin"
 	cmock "github.com/isd-sgcu/rnkm65-backend/src/mocks/cache"
 	rmock "github.com/isd-sgcu/rnkm65-backend/src/mocks/checkin"
 	"github.com/isd-sgcu/rnkm65-backend/src/proto"
@@ -47,24 +48,20 @@ func (t *CheckinServiceTest) SetupTest() {
 	t.CiToken = &checkin.CheckinToken{
 		Token:       t.Token,
 		UserId:      t.Ci.UserId,
-		CheckinType: "check_in",
+		CheckinType: cst.CHECKIN,
 	}
 
 	t.CiTokenInfo = &checkin.TokenInfo{
 		Id:          t.Ci.UserId,
-		CheckinType: "check_in",
+		CheckinType: cst.CHECKIN,
 		EventType:   1,
-	}
-
-	t.Conf = config.App{
-		CICacheTTL: 180,
 	}
 }
 
 func (t *CheckinServiceTest) TestCheckinVerifyCached() {
 	want := &proto.CheckinVerifyResponse{
 		CheckinToken: t.Token,
-		CheckinType:  "check_in",
+		CheckinType:  cst.CHECKIN,
 	}
 
 	req := &proto.CheckinVerifyRequest{
@@ -77,7 +74,7 @@ func (t *CheckinServiceTest) TestCheckinVerifyCached() {
 	repo := &rmock.RepositoryMock{}
 
 	cr := newCacheMock()
-	cr.On("GetCache", req.Id, ciToken).Return(t.CiToken, nil)
+	cr.On("GetCache", utils.GetCacheKey(req.Id, req.EventType), ciToken).Return(t.CiToken, nil)
 
 	service := NewService(repo, cr, t.Conf)
 
@@ -99,10 +96,9 @@ func (t *CheckinServiceTest) TestCheckinVerifyNewToken() {
 
 	repo.On("FindLastCheckin", t.Ci.UserId, t.Ci.EventType, &checkin.Checkin{}).Return(nil, gorm.ErrRecordNotFound)
 
-	// New Token is generate in service
-	cr.On("GetCache", req.Id, ciToken).Return(nil, redis.Nil)
-	cr.On("SaveCache", mock.Anything, t.CiTokenInfo, 60).Return(nil)
-	cr.On("SaveCache", t.Ci.UserId, mock.Anything, 60).Return(nil)
+	cr.On("GetCache", utils.GetCacheKey(req.Id, req.EventType), ciToken).Return(nil, redis.Nil)
+	cr.On("SaveCache", utils.GetCacheKey(t.Ci.UserId, req.EventType), mock.Anything, mock.Anything).Return(nil)
+	cr.On("SaveCache", mock.Anything, t.CiTokenInfo, mock.Anything).Return(nil)
 
 	service := NewService(repo, cr, t.Conf)
 
@@ -124,7 +120,7 @@ func (t *CheckinServiceTest) TestCheckinVerifyUnknown() {
 	repo.On("FindLastCheckin", t.Ci.UserId, t.Ci.EventType, ci).Return(nil, gorm.ErrInvalidData)
 
 	cr := newCacheMock()
-	cr.On("GetCache", req.Id, &checkin.CheckinToken{}).Return(nil, redis.Nil)
+	cr.On("GetCache", utils.GetCacheKey(req.Id, req.EventType), &checkin.CheckinToken{}).Return(nil, redis.Nil)
 
 	service := NewService(repo, cr, t.Conf)
 
@@ -164,11 +160,7 @@ func (t *CheckinServiceTest) TestCheckinConfirmUnknown() {
 	repo.On("Checkin", newCheckin(t.Ci.UserId, t.Ci.EventType)).Return(status.Error(codes.Internal, "Internal Error"))
 
 	cr := newCacheMock()
-	cr.On("GetCache", t.Token, &checkin.TokenInfo{}).Return(&checkin.TokenInfo{
-		Id:          t.Ci.UserId,
-		CheckinType: "check_in",
-		EventType:   t.Ci.EventType,
-	}, nil)
+	cr.On("GetCache", t.Token, &checkin.TokenInfo{}).Return(t.CiTokenInfo, nil)
 
 	service := NewService(repo, cr, t.Conf)
 
@@ -193,11 +185,7 @@ func (t *CheckinServiceTest) TestCheckinConfirmSuccess() {
 	repo.On("Checkin", newCheckin(t.Ci.UserId, t.Ci.EventType)).Return(nil)
 
 	cr := newCacheMock()
-	cr.On("GetCache", t.Token, &checkin.TokenInfo{}).Return(&checkin.TokenInfo{
-		Id:          t.Ci.UserId,
-		CheckinType: "check_in",
-		EventType:   t.Ci.EventType,
-	}, nil)
+	cr.On("GetCache", t.Token, &checkin.TokenInfo{}).Return(t.CiTokenInfo, nil)
 
 	service := NewService(repo, cr, t.Conf)
 
@@ -218,17 +206,12 @@ func (t *CheckinServiceTest) TestCheckoutConfirmSuccess() {
 
 	repo := &rmock.RepositoryMock{}
 
-	// repo.On("Checkout", co) cannot be used here
-	// since There's little delay between
-	// generating from t.ci and in service.Checkconfirm
-	// args.Called cannot be used in the situation
-
 	repo.On("Checkout", mock.Anything).Return(nil)
 
 	cr := newCacheMock()
 	cr.On("GetCache", t.Token, &checkin.TokenInfo{}).Return(&checkin.TokenInfo{
 		Id:          t.Ci.UserId,
-		CheckinType: "check_out",
+		CheckinType: cst.CHECKOUT,
 		EventType:   t.Ci.EventType,
 	}, nil)
 
@@ -256,7 +239,7 @@ func (t *CheckinServiceTest) TestCheckinConfirmInvalidUserId() {
 	cr := newCacheMock()
 	cr.On("GetCache", t.Token, &checkin.TokenInfo{}).Return(&checkin.TokenInfo{
 		Id:          randomUUID,
-		CheckinType: "check_in",
+		CheckinType: cst.CHECKIN,
 		EventType:   t.Ci.EventType,
 	}, nil)
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	cir "github.com/isd-sgcu/rnkm65-backend/src/app/repository/checkin"
 	bRepo "github.com/isd-sgcu/rnkm65-backend/src/app/repository/baan"
 	bgsRepo "github.com/isd-sgcu/rnkm65-backend/src/app/repository/baan-group-selection"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/repository/cache"
@@ -11,6 +12,7 @@ import (
 	evtRepo "github.com/isd-sgcu/rnkm65-backend/src/app/repository/event"
 	grpRepo "github.com/isd-sgcu/rnkm65-backend/src/app/repository/group"
 	ur "github.com/isd-sgcu/rnkm65-backend/src/app/repository/user"
+	csr "github.com/isd-sgcu/rnkm65-backend/src/app/service/checkin"
 	bSrv "github.com/isd-sgcu/rnkm65-backend/src/app/service/baan"
 	csr "github.com/isd-sgcu/rnkm65-backend/src/app/service/checkin"
 	evtService "github.com/isd-sgcu/rnkm65-backend/src/app/service/event"
@@ -165,6 +167,9 @@ func main() {
 
 	usrRepo := ur.NewRepository(db)
 	usrSvc := us.NewService(usrRepo, fileSrv, eventRepo)
+
+	ciRepo := cir.NewRepository(db)
+	ciSvc := csr.NewService(ciRepo, cacheRepo, conf.App)
 
 	ciRepo := cir.NewRepository(db)
 	ciSvc := csr.NewService(ciRepo, cacheRepo, conf.App)

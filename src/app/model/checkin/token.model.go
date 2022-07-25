@@ -3,11 +3,11 @@ package checkin
 type CheckinToken struct {
 	Token       string
 	UserId      string
-	CheckinType string
+	CheckinType int32
 }
 
 type TokenInfo struct {
 	Id          string
-	CheckinType string
+	CheckinType int32
 	EventType   int32
 }

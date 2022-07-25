@@ -20,9 +20,9 @@ func (r *Repository) Checkin(ci *checkin.Checkin) error {
 }
 
 func (r *Repository) Checkout(ci *checkin.Checkin) error {
-	return r.db.Where("user_id = ? AND event_type = ? AND checkout_at IS NULL", ci.UserId, ci.EventType).Updates(ci).Error
+	return r.db.Model(ci).Where("user_id = ? AND event_type = ? AND checkout_at IS NULL", ci.UserId, ci.EventType).Update("checkout_at", ci.CheckoutAt).Error
 }
 
 func (r *Repository) FindLastCheckin(userid string, eventType int32, result *checkin.Checkin) error {
-	return r.db.Where("user_id = ? AND event_type = ?", userid, eventType).Order("checkin_at DESC").Last(result).Error
+	return r.db.Where("user_id = ? AND event_type = ?", userid, eventType).Order("checkin_at DESC").First(result).Error
 }
