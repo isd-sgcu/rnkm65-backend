@@ -116,6 +116,7 @@ func DtoToRaw(in *proto.Event) (result *event.Event, err error) {
 		NameEN:        in.NameEN,
 		DescriptionEN: in.DescriptionEN,
 		Code:          in.Code,
+		ImageURL:      in.ImageURL,
 	}, nil
 }
 
@@ -127,6 +128,7 @@ func RawToDto(in *event.Event) *proto.Event {
 		NameEN:        in.NameEN,
 		DescriptionEN: in.DescriptionEN,
 		Code:          in.Code,
+		ImageURL:      in.ImageURL,
 	}
 }
 

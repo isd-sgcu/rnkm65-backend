@@ -13,6 +13,7 @@ type Event struct {
 	NameEN        string `json:"name_en"`
 	DescriptionEN string `json:"description_en"`
 	Code          string `json:"code"`
+	ImageURL      string `json:"image_url"`
 	// Users         []model.Base.user.User `json:"users" gorm:"many2many:event_user"`
 }
 

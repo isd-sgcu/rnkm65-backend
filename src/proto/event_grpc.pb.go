@@ -83,7 +83,7 @@ func (c *eventServiceClient) Delete(ctx context.Context, in *DeleteEventRequest,
 }
 
 // EventServiceServer is the server API for EventService service.
-// All implementations must embed UnimplementedEventServiceServer
+// All implementations should embed UnimplementedEventServiceServer
 // for forward compatibility
 type EventServiceServer interface {
 	FindAllEvent(context.Context, *FindAllEventRequest) (*FindAllEventResponse, error)
@@ -91,10 +91,9 @@ type EventServiceServer interface {
 	Create(context.Context, *CreateEventRequest) (*CreateEventResponse, error)
 	Update(context.Context, *UpdateEventRequest) (*UpdateEventResponse, error)
 	Delete(context.Context, *DeleteEventRequest) (*DeleteEventResponse, error)
-	mustEmbedUnimplementedEventServiceServer()
 }
 
-// UnimplementedEventServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedEventServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedEventServiceServer struct {
 }
 
@@ -113,7 +112,6 @@ func (UnimplementedEventServiceServer) Update(context.Context, *UpdateEventReque
 func (UnimplementedEventServiceServer) Delete(context.Context, *DeleteEventRequest) (*DeleteEventResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
-func (UnimplementedEventServiceServer) mustEmbedUnimplementedEventServiceServer() {}
 
 // UnsafeEventServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to EventServiceServer will
