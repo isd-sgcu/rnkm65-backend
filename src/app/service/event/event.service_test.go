@@ -2,6 +2,9 @@ package event
 
 import (
 	"context"
+	"errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"testing"
 	"time"
 
@@ -9,15 +12,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/model"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/model/event"
-	"github.com/isd-sgcu/rnkm65-backend/src/app/utils"
 	mock "github.com/isd-sgcu/rnkm65-backend/src/mocks/event"
-	fMock "github.com/isd-sgcu/rnkm65-backend/src/mocks/file"
 	"github.com/isd-sgcu/rnkm65-backend/src/proto"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 )
 
@@ -41,11 +39,11 @@ func (t *EventServiceTest) SetupTest() {
 			UpdatedAt: time.Time{},
 			DeletedAt: gorm.DeletedAt{},
 		},
-		NameTH:        faker.NameTH(),
-		DescriptionTH: faker.DescriptionTH(),
-		NameEN:        faker.NameEN,
-		DescriptionEN: faker.DescriptionEN,
-		Code:          faker.Code,
+		NameTH:        faker.Word(),
+		DescriptionTH: faker.Paragraph(),
+		NameEN:        faker.Word(),
+		DescriptionEN: faker.Paragraph(),
+		Code:          faker.Word(),
 	}
 
 	t.EventDto = &proto.Event{
@@ -59,80 +57,106 @@ func (t *EventServiceTest) SetupTest() {
 
 	t.CreateEventReqMock = &proto.CreateEventRequest{
 		Event: &proto.Event{
-			Title:           t.Event.Title,
-			Firstname:       t.Event.Firstname,
-			Lastname:        t.Event.Lastname,
-			Nickname:        t.Event.Nickname,
-			StudentID:       t.Event.StudentID,
-			Faculty:         t.Event.Faculty,
-			Year:            t.Event.Year,
-			Phone:           t.Event.Phone,
-			LineID:          t.Event.LineID,
-			Email:           t.Event.Email,
-			AllergyFood:     t.Event.AllergyFood,
-			FoodRestriction: t.Event.FoodRestriction,
-			AllergyMedicine: t.Event.AllergyMedicine,
-			Disease:         t.Event.Disease,
-			CanSelectBaan:   *t.Event.CanSelectBaan,
-			IsVerify:        *t.Event.IsVerify,
-			GroupId:         t.Event.GroupID.String(),
+			NameTH:        t.Event.NameTH,
+			DescriptionTH: t.Event.DescriptionTH,
+			NameEN:        t.Event.NameEN,
+			DescriptionEN: t.Event.DescriptionEN,
+			Code:          t.Event.Code,
 		},
 	}
 
 	t.UpdateEventReqMock = &proto.UpdateEventRequest{
 		Event: &proto.Event{
-			Id:              t.Event.ID.String(),
-			Title:           t.Event.Title,
-			Firstname:       t.Event.Firstname,
-			Lastname:        t.Event.Lastname,
-			Nickname:        t.Event.Nickname,
-			StudentID:       t.Event.StudentID,
-			Faculty:         t.Event.Faculty,
-			Year:            t.Event.Year,
-			Phone:           t.Event.Phone,
-			LineID:          t.Event.LineID,
-			Email:           t.Event.Email,
-			AllergyFood:     t.Event.AllergyFood,
-			FoodRestriction: t.Event.FoodRestriction,
-			AllergyMedicine: t.Event.AllergyMedicine,
-			Disease:         t.Event.Disease,
-			CanSelectBaan:   *t.Event.CanSelectBaan,
-			IsVerify:        *t.Event.IsVerify,
-			GroupId:         t.Event.GroupID.String(),
+			Id:            t.Event.ID.String(),
+			NameTH:        t.Event.NameTH,
+			DescriptionTH: t.Event.DescriptionTH,
+			NameEN:        t.Event.NameEN,
+			DescriptionEN: t.Event.DescriptionEN,
+			Code:          t.Event.Code,
 		},
 	}
 }
 
-func (t *EventServiceTest) TestFindOneSuccess() {
-	url := faker.URL()
+func (t *EventServiceTest) createEventDto(in []*event.Event) []*proto.Event {
+	var result []*proto.Event
 
-	t.EventDto.ImageUrl = url
+	for _, e := range in {
+		r := &proto.Event{
+			Id:            e.ID.String(),
+			NameTH:        e.NameTH,
+			DescriptionTH: e.DescriptionTH,
+			NameEN:        e.NameEN,
+			DescriptionEN: e.DescriptionEN,
+			Code:          e.Code,
+		}
 
-	want := &proto.FindOneEventResponse{Event: t.EventDto}
+		result = append(result, r)
+	}
 
-	repo := &mock.RepositoryMock{}
-	repo.On("FindOne", t.Event.ID.String(), &event.Event{}).Return(t.Event, nil)
+	return result
+}
 
-	fileSrv := &fMock.ServiceMock{}
-	fileSrv.On("GetSignedUrl", t.Event.ID.String()).Return(url, nil)
+func (t *EventServiceTest) createEvent() []*event.Event {
+	var result []*event.Event
 
-	srv := NewService(repo, fileSrv)
+	for i := 0; i <= 5; i++ {
+		r := &event.Event{
+			Base: model.Base{
+				ID: uuid.New(),
+			},
+			NameTH:        faker.Word(),
+			DescriptionTH: faker.Paragraph(),
+			NameEN:        faker.Word(),
+			DescriptionEN: faker.Paragraph(),
+			Code:          faker.Word(),
+		}
 
-	actual, err := srv.FindOne(context.Background(), &proto.FindOneEventRequest{Id: t.Event.ID.String()})
+		result = append(result, r)
+	}
+
+	return result
+}
+
+func (t *EventServiceTest) TestFindAllEventSuccess() {
+
+	eventList := t.createEvent()
+
+	want := &proto.FindAllEventResponse{Event: t.createEventDto(eventList)}
+
+	var eventsIn []*event.Event
+
+	r := mock.RepositoryMock{}
+	r.On("FindAllEvent", &eventsIn).Return(eventList, nil)
+
+	srv := NewService(&r)
+	actual, err := srv.FindAllEvent(context.Background(), &proto.FindAllEventRequest{})
 
 	assert.Nil(t.T(), err)
 	assert.Equal(t.T(), want, actual)
 }
 
-func (t *EventServiceTest) TestFindOneNotFound() {
+func (t *EventServiceTest) TestFindEventByIDSuccess() {
+
+	want := &proto.FindEventByIDResponse{Event: t.EventDto}
+
 	repo := &mock.RepositoryMock{}
-	repo.On("FindOne", t.Event.ID.String(), &event.Event{}).Return(nil, errors.New("Not found event"))
+	repo.On("FindEventByID", t.Event.ID.String(), &event.Event{}).Return(t.Event, nil)
 
-	fileSrv := &fMock.ServiceMock{}
+	srv := NewService(repo)
 
-	srv := NewService(repo, fileSrv)
+	actual, err := srv.FindEventByID(context.Background(), &proto.FindEventByIDRequest{Id: t.Event.ID.String()})
 
-	actual, err := srv.FindOne(context.Background(), &proto.FindOneEventRequest{Id: t.Event.ID.String()})
+	assert.Nil(t.T(), err)
+	assert.Equal(t.T(), want, actual)
+}
+
+func (t *EventServiceTest) TestFindEventByIDNotFound() {
+	repo := &mock.RepositoryMock{}
+	repo.On("FindEventByID", t.Event.ID.String(), &event.Event{}).Return(nil, errors.New("Not found event"))
+
+	srv := NewService(repo)
+
+	actual, err := srv.FindEventByID(context.Background(), &proto.FindEventByIDRequest{Id: t.Event.ID.String()})
 
 	st, ok := status.FromError(err)
 
@@ -147,29 +171,15 @@ func (t *EventServiceTest) TestCreateSuccess() {
 	repo := &mock.RepositoryMock{}
 
 	in := &event.Event{
-		Title:           t.Event.Title,
-		Firstname:       t.Event.Firstname,
-		Lastname:        t.Event.Lastname,
-		Nickname:        t.Event.Nickname,
-		StudentID:       t.Event.StudentID,
-		Faculty:         t.Event.Faculty,
-		Year:            t.Event.Year,
-		Phone:           t.Event.Phone,
-		LineID:          t.Event.LineID,
-		Email:           t.Event.Email,
-		AllergyFood:     t.Event.AllergyFood,
-		FoodRestriction: t.Event.FoodRestriction,
-		AllergyMedicine: t.Event.AllergyMedicine,
-		Disease:         t.Event.Disease,
-		CanSelectBaan:   t.Event.CanSelectBaan,
-		GroupID:         t.Event.GroupID,
+		NameTH:        t.Event.NameTH,
+		DescriptionTH: t.Event.DescriptionTH,
+		NameEN:        t.Event.NameEN,
+		DescriptionEN: t.Event.DescriptionEN,
+		Code:          t.Event.Code,
 	}
 
 	repo.On("Create", in).Return(t.Event, nil)
-
-	fileSrv := &fMock.ServiceMock{}
-
-	srv := NewService(repo, fileSrv)
+	srv := NewService(repo)
 
 	actual, err := srv.Create(context.Background(), t.CreateEventReqMock)
 
@@ -181,29 +191,16 @@ func (t *EventServiceTest) TestCreateInternalErr() {
 	repo := &mock.RepositoryMock{}
 
 	in := &event.Event{
-		Title:           t.Event.Title,
-		Firstname:       t.Event.Firstname,
-		Lastname:        t.Event.Lastname,
-		Nickname:        t.Event.Nickname,
-		StudentID:       t.Event.StudentID,
-		Faculty:         t.Event.Faculty,
-		Year:            t.Event.Year,
-		Phone:           t.Event.Phone,
-		LineID:          t.Event.LineID,
-		Email:           t.Event.Email,
-		AllergyFood:     t.Event.AllergyFood,
-		FoodRestriction: t.Event.FoodRestriction,
-		AllergyMedicine: t.Event.AllergyMedicine,
-		Disease:         t.Event.Disease,
-		CanSelectBaan:   t.Event.CanSelectBaan,
-		GroupID:         t.Event.GroupID,
+		NameTH:        t.Event.NameTH,
+		DescriptionTH: t.Event.DescriptionTH,
+		NameEN:        t.Event.NameEN,
+		DescriptionEN: t.Event.DescriptionEN,
+		Code:          t.Event.Code,
 	}
 
 	repo.On("Create", in).Return(nil, errors.New("something wrong"))
 
-	fileSrv := &fMock.ServiceMock{}
-
-	srv := NewService(repo, fileSrv)
+	srv := NewService(repo)
 
 	actual, err := srv.Create(context.Background(), t.CreateEventReqMock)
 
@@ -218,15 +215,12 @@ func (t *EventServiceTest) TestUpdateSuccess() {
 	want := &proto.UpdateEventResponse{Event: t.EventDto}
 
 	eventIn := *t.Event
-	eventIn.IsVerify = nil
 
 	repo := &mock.RepositoryMock{}
 
 	repo.On("Update", t.Event.ID.String(), &eventIn).Return(t.Event, nil)
 
-	fileSrv := &fMock.ServiceMock{}
-
-	srv := NewService(repo, fileSrv)
+	srv := NewService(repo)
 	actual, err := srv.Update(context.Background(), t.UpdateEventReqMock)
 
 	assert.Nil(t.T(), err)
@@ -235,14 +229,11 @@ func (t *EventServiceTest) TestUpdateSuccess() {
 
 func (t *EventServiceTest) TestUpdateNotFound() {
 	eventIn := *t.Event
-	eventIn.IsVerify = nil
 
 	repo := &mock.RepositoryMock{}
 	repo.On("Update", t.Event.ID.String(), &eventIn).Return(nil, errors.New("Not found event"))
 
-	fileSrv := &fMock.ServiceMock{}
-
-	srv := NewService(repo, fileSrv)
+	srv := NewService(repo)
 	actual, err := srv.Update(context.Background(), t.UpdateEventReqMock)
 
 	st, ok := status.FromError(err)
@@ -254,14 +245,11 @@ func (t *EventServiceTest) TestUpdateNotFound() {
 
 func (t *EventServiceTest) TestUpdateMalformed() {
 	eventIn := *t.Event
-	eventIn.IsVerify = nil
 
 	repo := &mock.RepositoryMock{}
 	repo.On("Update", t.Event.ID.String(), eventIn).Return(nil, errors.New("Not found event"))
 
-	fileSrv := &fMock.ServiceMock{}
-
-	srv := NewService(repo, fileSrv)
+	srv := NewService(repo)
 
 	t.UpdateEventReqMock.Event.Id = "abc"
 
@@ -281,9 +269,7 @@ func (t *EventServiceTest) TestDeleteSuccess() {
 
 	repo.On("Delete", t.Event.ID.String()).Return(nil)
 
-	fileSrv := &fMock.ServiceMock{}
-
-	srv := NewService(repo, fileSrv)
+	srv := NewService(repo)
 	actual, err := srv.Delete(context.Background(), &proto.DeleteEventRequest{Id: t.EventDto.Id})
 
 	assert.Nil(t.T(), err)
@@ -295,9 +281,7 @@ func (t *EventServiceTest) TestDeleteNotFound() {
 
 	repo.On("Delete", t.Event.ID.String()).Return(errors.New("Not found event"))
 
-	fileSrv := &fMock.ServiceMock{}
-
-	srv := NewService(repo, fileSrv)
+	srv := NewService(repo)
 	actual, err := srv.Delete(context.Background(), &proto.DeleteEventRequest{Id: t.EventDto.Id})
 
 	st, ok := status.FromError(err)
