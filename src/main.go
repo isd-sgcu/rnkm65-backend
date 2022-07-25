@@ -9,11 +9,11 @@ import (
 	bRepo "github.com/isd-sgcu/rnkm65-backend/src/app/repository/baan"
 	bgsRepo "github.com/isd-sgcu/rnkm65-backend/src/app/repository/baan-group-selection"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/repository/cache"
+	evtRepo "github.com/isd-sgcu/rnkm65-backend/src/app/repository/event"
 	grpRepo "github.com/isd-sgcu/rnkm65-backend/src/app/repository/group"
 	ur "github.com/isd-sgcu/rnkm65-backend/src/app/repository/user"
 	csr "github.com/isd-sgcu/rnkm65-backend/src/app/service/checkin"
 	evtService "github.com/isd-sgcu/rnkm65-backend/src/app/service/event"
-	bSrv "github.com/isd-sgcu/rnkm65-backend/src/app/service/baan"
 	fSrv "github.com/isd-sgcu/rnkm65-backend/src/app/service/file"
 	grpService "github.com/isd-sgcu/rnkm65-backend/src/app/service/group"
 	us "github.com/isd-sgcu/rnkm65-backend/src/app/service/user"
@@ -28,6 +28,12 @@ import (
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 	"gorm.io/gorm"
+	"net"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+	"time"
 )
 
 func handleArgs(db *gorm.DB) {

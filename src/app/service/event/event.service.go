@@ -19,7 +19,7 @@ type Service struct {
 }
 
 type IRepository interface {
-	FindAll(*[]*event.Event) error
+	FindAllEvent(*[]*event.Event) error
 	FindEventByID(string, *event.Event) error
 	Create(*event.Event) error
 	Update(string, *event.Event) error
@@ -34,7 +34,7 @@ func NewService(repo IRepository) *Service {
 func (s *Service) FindAllEvent(_ context.Context, req *proto.FindAllEventRequest) (res *proto.FindAllEventResponse, err error) {
 	var events []*event.Event
 
-	err = s.repo.FindAll(&events)
+	err = s.repo.FindAllEvent(&events)
 	if err != nil {
 
 		log.Error().Err(err).
@@ -126,6 +126,7 @@ func RawToDto(in *event.Event) *proto.Event {
 		DescriptionTH: in.DescriptionTH,
 		NameEN:        in.NameEN,
 		DescriptionEN: in.DescriptionEN,
+		Code:          in.Code,
 	}
 }
 
