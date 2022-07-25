@@ -44,6 +44,7 @@ func (t *EventServiceTest) SetupTest() {
 		NameEN:        faker.Word(),
 		DescriptionEN: faker.Paragraph(),
 		Code:          faker.Word(),
+		ImageURL:      faker.Paragraph(),
 	}
 
 	t.EventDto = &proto.Event{
@@ -53,6 +54,7 @@ func (t *EventServiceTest) SetupTest() {
 		NameEN:        t.Event.NameEN,
 		DescriptionEN: t.Event.DescriptionEN,
 		Code:          t.Event.Code,
+		ImageURL:      t.Event.ImageURL,
 	}
 
 	t.CreateEventReqMock = &proto.CreateEventRequest{
@@ -62,6 +64,7 @@ func (t *EventServiceTest) SetupTest() {
 			NameEN:        t.Event.NameEN,
 			DescriptionEN: t.Event.DescriptionEN,
 			Code:          t.Event.Code,
+			ImageURL:      t.Event.ImageURL,
 		},
 	}
 
@@ -73,6 +76,7 @@ func (t *EventServiceTest) SetupTest() {
 			NameEN:        t.Event.NameEN,
 			DescriptionEN: t.Event.DescriptionEN,
 			Code:          t.Event.Code,
+			ImageURL:      t.Event.ImageURL,
 		},
 	}
 }
@@ -88,6 +92,7 @@ func (t *EventServiceTest) createEventDto(in []*event.Event) []*proto.Event {
 			NameEN:        e.NameEN,
 			DescriptionEN: e.DescriptionEN,
 			Code:          e.Code,
+			ImageURL:      e.ImageURL,
 		}
 
 		result = append(result, r)
@@ -109,6 +114,7 @@ func (t *EventServiceTest) createEvent() []*event.Event {
 			NameEN:        faker.Word(),
 			DescriptionEN: faker.Paragraph(),
 			Code:          faker.Word(),
+			ImageURL:      faker.Paragraph(),
 		}
 
 		result = append(result, r)
@@ -176,6 +182,7 @@ func (t *EventServiceTest) TestCreateSuccess() {
 		NameEN:        t.Event.NameEN,
 		DescriptionEN: t.Event.DescriptionEN,
 		Code:          t.Event.Code,
+		ImageURL:      t.Event.ImageURL,
 	}
 
 	repo.On("Create", in).Return(t.Event, nil)
@@ -196,6 +203,7 @@ func (t *EventServiceTest) TestCreateInternalErr() {
 		NameEN:        t.Event.NameEN,
 		DescriptionEN: t.Event.DescriptionEN,
 		Code:          t.Event.Code,
+		ImageURL:      t.Event.ImageURL,
 	}
 
 	repo.On("Create", in).Return(nil, errors.New("something wrong"))
