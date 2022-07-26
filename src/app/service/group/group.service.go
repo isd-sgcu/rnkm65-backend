@@ -17,6 +17,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
+	"strconv"
 	"time"
 )
 
@@ -338,6 +339,17 @@ func (s *Service) Join(_ context.Context, req *proto.JoinGroupRequest) (res *pro
 			Str("user_id", req.UserId).
 			Msg("Not found user")
 		return nil, status.Error(codes.NotFound, "user not found")
+	}
+
+	year, _ := strconv.Atoi(joinUser.Year)
+	if year > 1 {
+		log.Error().
+			Err(err).
+			Str("service", "group").
+			Str("module", "join").
+			Str("student_id", joinUser.StudentID).
+			Msg("Cannot join group (forbidden year)")
+		return nil, status.Error(codes.PermissionDenied, "Cannot join group (forbidden year)")
 	}
 
 	//check if the joining user is in the joined group or not
