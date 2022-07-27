@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/model"
+	"github.com/isd-sgcu/rnkm65-backend/src/app/model/event"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/model/user"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/utils"
 	"github.com/isd-sgcu/rnkm65-backend/src/proto"
@@ -15,8 +16,9 @@ import (
 )
 
 type Service struct {
-	repo    IRepository
-	fileSrv IFileService
+	repo      IRepository
+	eventRepo IEventRepository
+	fileSrv   IFileService
 }
 
 type IRepository interface {
@@ -32,12 +34,16 @@ type IRepository interface {
 	FindUserEstamp(string, *[]string, *[]string) error
 }
 
+type IEventRepository interface {
+	FindEventByID(id string, result *event.Event) error
+}
+
 type IFileService interface {
 	GetSignedUrl(string) (string, error)
 }
 
-func NewService(repo IRepository, fileSrv IFileService) *Service {
-	return &Service{repo: repo, fileSrv: fileSrv}
+func NewService(repo IRepository, fileSrv IFileService, eventRepo IEventRepository) *Service {
+	return &Service{repo: repo, fileSrv: fileSrv, eventRepo: eventRepo}
 }
 
 func (s *Service) FindOne(_ context.Context, req *proto.FindOneUserRequest) (res *proto.FindOneUserResponse, err error) {
