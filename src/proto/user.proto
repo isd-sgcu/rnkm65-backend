@@ -12,6 +12,9 @@ service UserService {
   rpc Verify(VerifyUserRequest) returns (VerifyUserResponse){}
   rpc Delete(DeleteUserRequest) returns (DeleteUserResponse){}
   rpc CreateOrUpdate(CreateOrUpdateUserRequest) returns (CreateOrUpdateUserResponse){}
+  rpc VerifyEstamp(VerifyEstampRequest) returns (VerifyEstampResponse){}
+  rpc ConfirmEstamp(ConfirmEstampRequest) returns (ConfirmEstampResponse){}
+  rpc FindUserEstamp(FindUserEstampRequest) returns (FindUserEstampResponse){}
 }
 
 message User{
@@ -34,6 +37,7 @@ message User{
   bool canSelectBaan = 17;
   bool isVerify = 18;
   string groupId = 19;
+
 }
 
 // FindOne
@@ -115,4 +119,34 @@ message VerifyUserRequest{
 
 message VerifyUserResponse{
   bool success = 1;
+}
+
+// VerifyEstamp
+message VerifyEstampRequest {
+  string uId = 1;
+  string eId = 2;
+}
+
+message VerifyEstampResponse {
+  bool found = 1;
+}
+
+// ConfirmEstamp
+message ConfirmEstampRequest {
+  string uId = 1;
+  string eId = 2;
+}
+
+message ConfirmEstampResponse {
+  User user = 1;
+}
+
+// FindUserEstamp
+message FindUserEstampRequest {
+  string uId = 1;
+}
+
+message FindUserEstampResponse {
+  repeated string foundList = 1;
+  repeated string unfoundList = 2;
 }

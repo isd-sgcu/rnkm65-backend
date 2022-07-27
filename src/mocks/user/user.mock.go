@@ -9,6 +9,21 @@ type RepositoryMock struct {
 	mock.Mock
 }
 
+func (r *RepositoryMock) VerifyEstamp(s string, s2 string, b bool) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r *RepositoryMock) ConfirmEstamp(s string, s2 string, u *user.User) error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r *RepositoryMock) FindUserEstamp(s string, i *[]string, i2 *[]string) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (r *RepositoryMock) CreateOrUpdate(in *user.User) error {
 	args := r.Called(in)
 

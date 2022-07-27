@@ -27,6 +27,9 @@ type IRepository interface {
 	Verify(string) error
 	Delete(string) error
 	CreateOrUpdate(*user.User) error
+	VerifyEstamp(string, string, bool) error
+	ConfirmEstamp(string, string, *user.User) error
+	FindUserEstamp(string, *[]string, *[]string) error
 }
 
 type IFileService interface {
@@ -194,6 +197,40 @@ func (s *Service) Delete(_ context.Context, req *proto.DeleteUserRequest) (res *
 	}
 
 	return &proto.DeleteUserResponse{Success: true}, nil
+}
+
+func (s *Service) VerifyEstamp(_ context.Context, req *proto.VerifyEstampRequest) (res *proto.VerifyEstampResponse, err error) {
+	var found bool
+	err = s.repo.VerifyEstamp(req.UId, req.EId, found)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "user not found")
+	}
+
+	return &proto.VerifyEstampResponse{Found: found}, nil
+
+}
+
+func (s *Service) ConfirmEstamp(_ context.Context, req *proto.ConfirmEstampRequest) (res *proto.ConfirmEstampResponse, err error) {
+	var user user.User
+	err = s.repo.ConfirmEstamp(req.UId, req.EId, &user)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "user not found")
+	}
+
+	return &proto.ConfirmEstampResponse{User: RawToDto(&user, "")}, nil
+}
+
+func (s *Service) FindUserEstamp(_ context.Context, req *proto.FindUserEstampRequest) (res *proto.FindUserEstampResponse, err error) {
+	var foundList, unfoundList []string
+	err = s.repo.FindUserEstamp(req.UId, &foundList, &unfoundList)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "user not found")
+	}
+
+	return &proto.FindUserEstampResponse{
+		FoundList:   foundList,
+		UnfoundList: unfoundList,
+	}, nil
 }
 
 func DtoToRaw(in *proto.User) (result *user.User, err error) {

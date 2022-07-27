@@ -61,7 +61,7 @@ func (r *Repository) VerifyEstamp(uId string, eId string) bool {
 }
 
 func (r *Repository) ConfirmEstamp(uId string, eId string) error {
-	//Check if this user has this estamp
+	//Add this estamp to user
 	var thisUser user.User
 	result := r.db.First(&thisUser, "id = ?", uId)
 	if result.Error != nil {
