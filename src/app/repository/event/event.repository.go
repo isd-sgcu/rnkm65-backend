@@ -17,6 +17,10 @@ func (r *Repository) FindAllEvent(result *[]*event.Event) error {
 	return r.db.Model(&event.Event{}).Find(result).Error
 }
 
+func (r *Repository) FindAllEventWithType(eventType string, result *[]*event.Event) error {
+	return r.db.Model(&event.Event{}).Find(result, "eventType = ?", eventType).Error
+}
+
 func (r *Repository) FindEventByID(id string, result *event.Event) error {
 	return r.db.First(&result, "id = ?", id).Error
 }

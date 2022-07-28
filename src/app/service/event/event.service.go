@@ -24,6 +24,7 @@ type IRepository interface {
 	Create(*event.Event) error
 	Update(string, *event.Event) error
 	Delete(string) error
+	FindAllEventWithType(string, *[]*event.Event) error
 }
 
 func NewService(repo IRepository) *Service {
@@ -92,6 +93,16 @@ func (s *Service) Delete(_ context.Context, req *proto.DeleteEventRequest) (res 
 	}
 
 	return &proto.DeleteEventResponse{Success: true}, nil
+}
+
+func (s *Service) FindAllEventWithType(_ context.Context, req *proto.FindAllEventWithTypeRequest) (res *proto.FindAllEventWithTypeResponse, err error) {
+	var events []*event.Event
+	err = s.repo.FindAllEventWithType(req.EventType, &events)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "eventType not found")
+	}
+
+	return &proto.FindAllEventWithTypeResponse{Event: RawToDtoList(&events)}, nil
 }
 
 func DtoToRaw(in *proto.Event) (result *event.Event, err error) {

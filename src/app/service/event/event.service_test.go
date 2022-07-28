@@ -297,3 +297,21 @@ func (t *EventServiceTest) TestDeleteNotFound() {
 	assert.Nil(t.T(), actual)
 	assert.Equal(t.T(), codes.NotFound, st.Code())
 }
+
+func (t *EventServiceTest) TestFindAllEventWithTypeSuccess() {
+
+	eventList := t.createEvent()
+
+	want := &proto.FindAllEventWithTypeResponse{Event: t.createEventDto(eventList)}
+
+	var eventsIn []*event.Event
+
+	r := mock.RepositoryMock{}
+	r.On("FindAllEventWithType", &eventsIn).Return(eventList, nil)
+
+	srv := NewService(&r)
+	actual, err := srv.FindAllEventWithType(context.Background(), &proto.FindAllEventWithTypeRequest{})
+
+	assert.Nil(t.T(), err)
+	assert.Equal(t.T(), want, actual)
+}

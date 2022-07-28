@@ -14,7 +14,7 @@ type Event struct {
 	DescriptionEN string `json:"description_en"`
 	Code          string `json:"code"`
 	ImageURL      string `json:"image_url"`
-	// Users         []model.Base.user.User `json:"users" gorm:"many2many:event_user"`
+	EventType     string `json:"event_type"`
 }
 
 func (e *Event) BeforeCreate(_ *gorm.DB) error {
