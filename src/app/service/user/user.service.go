@@ -29,13 +29,14 @@ type IRepository interface {
 	Verify(string) error
 	Delete(string) error
 	CreateOrUpdate(*user.User) error
-	VerifyEstamp(string, string, bool) error
-	ConfirmEstamp(string, string, *user.User) error
-	FindUserEstamp(string, *[]string, *[]string) error
+	VerifyEstamp(*user.User, *event.Event) error
+	ConfirmEstamp(*user.User, *event.Event) error
+	GetUserEstamp(*user.User, *[]*event.Event) error
 }
 
 type IEventRepository interface {
 	FindEventByID(id string, result *event.Event) error
+	FindAllEvent(result *[]*event.Event) error
 }
 
 type IFileService interface {
@@ -199,7 +200,7 @@ func (s *Service) Update(_ context.Context, req *proto.UpdateUserRequest) (res *
 func (s *Service) Delete(_ context.Context, req *proto.DeleteUserRequest) (res *proto.DeleteUserResponse, err error) {
 	err = s.repo.Delete(req.Id)
 	if err != nil {
-		return nil, status.Error(codes.NotFound, "user not found")
+		return nil, status.Error(codes.NotFound, "something wrong")
 	}
 
 	return &proto.DeleteUserResponse{Success: true}, nil
@@ -207,9 +208,21 @@ func (s *Service) Delete(_ context.Context, req *proto.DeleteUserRequest) (res *
 
 func (s *Service) VerifyEstamp(_ context.Context, req *proto.VerifyEstampRequest) (res *proto.VerifyEstampResponse, err error) {
 	var found bool
-	err = s.repo.VerifyEstamp(req.UId, req.EId, found)
+	var user user.User
+	var event event.Event
+
+	err = s.repo.FindOne(req.UId, &user)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "user not found")
+	}
+	err = s.eventRepo.FindEventByID(req.EId, &event)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "event not found")
+	}
+
+	err = s.repo.VerifyEstamp(&user, &event)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "something wrong")
 	}
 
 	return &proto.VerifyEstampResponse{Found: found}, nil
@@ -218,24 +231,41 @@ func (s *Service) VerifyEstamp(_ context.Context, req *proto.VerifyEstampRequest
 
 func (s *Service) ConfirmEstamp(_ context.Context, req *proto.ConfirmEstampRequest) (res *proto.ConfirmEstampResponse, err error) {
 	var user user.User
-	err = s.repo.ConfirmEstamp(req.UId, req.EId, &user)
+	var event event.Event
+
+	err = s.repo.FindOne(req.UId, &user)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "user not found")
+	}
+	err = s.eventRepo.FindEventByID(req.EId, &event)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "event not found")
+	}
+
+	err = s.repo.ConfirmEstamp(&user, &event)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "user not found")
 	}
 
-	return &proto.ConfirmEstampResponse{User: RawToDto(&user, "")}, nil
+	return &proto.ConfirmEstampResponse{Event: EventRawToDto(&event)}, nil
 }
 
-func (s *Service) FindUserEstamp(_ context.Context, req *proto.FindUserEstampRequest) (res *proto.FindUserEstampResponse, err error) {
-	var foundList, unfoundList []string
-	err = s.repo.FindUserEstamp(req.UId, &foundList, &unfoundList)
+func (s *Service) GetUserEstamp(_ context.Context, req *proto.GetUserEstampRequest) (res *proto.GetUserEstampResponse, err error) {
+	var user user.User
+	var events []*event.Event
+
+	err = s.repo.FindOne(req.UId, &user)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "user not found")
 	}
 
-	return &proto.FindUserEstampResponse{
-		FoundList:   foundList,
-		UnfoundList: unfoundList,
+	err = s.repo.GetUserEstamp(&user, &events)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "something wrong")
+	}
+
+	return &proto.GetUserEstampResponse{
+		EventList: EventRawToDtoList(&events),
 	}, nil
 }
 
@@ -318,4 +348,25 @@ func RawToDto(in *user.User, imgUrl string) *proto.User {
 		CanSelectBaan:   *in.CanSelectBaan,
 		IsVerify:        *in.IsVerify,
 	}
+}
+
+func EventRawToDto(in *event.Event) *proto.Event {
+	return &proto.Event{
+		Id:            in.ID.String(),
+		NameTH:        in.NameTH,
+		DescriptionTH: in.DescriptionTH,
+		NameEN:        in.NameEN,
+		DescriptionEN: in.DescriptionEN,
+		Code:          in.Code,
+		ImageURL:      in.ImageURL,
+	}
+}
+
+func EventRawToDtoList(in *[]*event.Event) []*proto.Event {
+	var result []*proto.Event
+	for _, e := range *in {
+		result = append(result, EventRawToDto(e))
+	}
+
+	return result
 }

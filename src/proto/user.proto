@@ -1,5 +1,5 @@
 syntax = "proto3";
-
+import "event.proto";
 package user;
 
 option go_package = "src/proto";
@@ -14,7 +14,7 @@ service UserService {
   rpc CreateOrUpdate(CreateOrUpdateUserRequest) returns (CreateOrUpdateUserResponse){}
   rpc VerifyEstamp(VerifyEstampRequest) returns (VerifyEstampResponse){}
   rpc ConfirmEstamp(ConfirmEstampRequest) returns (ConfirmEstampResponse){}
-  rpc FindUserEstamp(FindUserEstampRequest) returns (FindUserEstampResponse){}
+  rpc GetUserEstamp(GetUserEstampRequest) returns (GetUserEstampResponse){}
 }
 
 message User{
@@ -138,15 +138,14 @@ message ConfirmEstampRequest {
 }
 
 message ConfirmEstampResponse {
-  User user = 1;
+  event.Event event = 1;
 }
 
-// FindUserEstamp
-message FindUserEstampRequest {
+// GetUserEstamp
+message GetUserEstampRequest {
   string uId = 1;
 }
 
-message FindUserEstampResponse {
-  repeated string foundList = 1;
-  repeated string unfoundList = 2;
+message GetUserEstampResponse {
+  repeated event.Event eventList = 1;
 }

@@ -47,62 +47,17 @@ func (r *Repository) Delete(id string) error {
 	return r.db.Where("id = ?", id).Delete(&user.User{}).Error
 }
 
-func (r *Repository) VerifyEstamp(uId string, eId string) bool {
-	//Check if this user has this estamp
-	var thisUser user.User
-	r.db.First(&thisUser, "id = ?", uId)
-
-	for _, event := range thisUser.Events {
-		if event.ID.String() == eId {
-			return true
-		}
-	}
-	return false
+func (r *Repository) VerifyEstamp(thisUser user.User, thisEvent event.Event) error {
+	//Check if this user has this estamp (Yes/No)
+	return r.db.Model(&thisUser).Association("Events").Find(&thisEvent)
 }
 
-func (r *Repository) ConfirmEstamp(uId string, eId string) error {
+func (r *Repository) ConfirmEstamp(thisUser user.User, thisEvent event.Event) error {
 	//Add this estamp to user
-	var thisUser user.User
-	result := r.db.First(&thisUser, "id = ?", uId)
-	if result.Error != nil {
-		return result.Error
-	}
-
-	var thisEvent event.Event
-	result = r.db.First(&thisEvent, "id = ?", eId)
-	if result.Error != nil {
-		return result.Error
-	}
-
-	thisUser.Events = append(thisUser.Events, &thisEvent)
-	return nil
+	return r.db.Model(&thisUser).Association("Events").Append(&thisEvent)
 }
 
-func (r *Repository) FindUserEstamp(uId string, foundList []string, unfoundList []string) error {
-	//Find all estamps this user has and hasn't
-	var thisUser user.User
-	result := r.db.First(&thisUser, "id = ?", uId)
-	if result.Error != nil {
-		return result.Error
-	}
-
-	var allEvent []*event.Event
-	result = r.db.Model(&event.Event{}).Find(allEvent)
-	if result.Error != nil {
-		return result.Error
-	}
-
-	flag := make(map[string]bool)
-	for _, e := range thisUser.Events {
-		flag[e.ID.String()] = true
-	}
-
-	for _, e := range allEvent {
-		if flag[e.ID.String()] == true {
-			foundList = append(foundList, e.ID.String())
-		} else {
-			unfoundList = append(unfoundList, e.ID.String())
-		}
-	}
-	return nil
+func (r *Repository) GetUserEstamp(thisUser user.User, results *[]*event.Event) error {
+	//Get all estamp that this user has
+	return r.db.Model(&thisUser).Association("Events").Find(&results)
 }

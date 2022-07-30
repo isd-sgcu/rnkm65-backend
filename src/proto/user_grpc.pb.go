@@ -31,7 +31,7 @@ type UserServiceClient interface {
 	CreateOrUpdate(ctx context.Context, in *CreateOrUpdateUserRequest, opts ...grpc.CallOption) (*CreateOrUpdateUserResponse, error)
 	VerifyEstamp(ctx context.Context, in *VerifyEstampRequest, opts ...grpc.CallOption) (*VerifyEstampResponse, error)
 	ConfirmEstamp(ctx context.Context, in *ConfirmEstampRequest, opts ...grpc.CallOption) (*ConfirmEstampResponse, error)
-	FindUserEstamp(ctx context.Context, in *FindUserEstampRequest, opts ...grpc.CallOption) (*FindUserEstampResponse, error)
+	GetUserEstamp(ctx context.Context, in *GetUserEstampRequest, opts ...grpc.CallOption) (*GetUserEstampResponse, error)
 }
 
 type userServiceClient struct {
@@ -123,9 +123,9 @@ func (c *userServiceClient) ConfirmEstamp(ctx context.Context, in *ConfirmEstamp
 	return out, nil
 }
 
-func (c *userServiceClient) FindUserEstamp(ctx context.Context, in *FindUserEstampRequest, opts ...grpc.CallOption) (*FindUserEstampResponse, error) {
-	out := new(FindUserEstampResponse)
-	err := c.cc.Invoke(ctx, "/user.UserService/FindUserEstamp", in, out, opts...)
+func (c *userServiceClient) GetUserEstamp(ctx context.Context, in *GetUserEstampRequest, opts ...grpc.CallOption) (*GetUserEstampResponse, error) {
+	out := new(GetUserEstampResponse)
+	err := c.cc.Invoke(ctx, "/user.UserService/GetUserEstamp", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +145,7 @@ type UserServiceServer interface {
 	CreateOrUpdate(context.Context, *CreateOrUpdateUserRequest) (*CreateOrUpdateUserResponse, error)
 	VerifyEstamp(context.Context, *VerifyEstampRequest) (*VerifyEstampResponse, error)
 	ConfirmEstamp(context.Context, *ConfirmEstampRequest) (*ConfirmEstampResponse, error)
-	FindUserEstamp(context.Context, *FindUserEstampRequest) (*FindUserEstampResponse, error)
+	GetUserEstamp(context.Context, *GetUserEstampRequest) (*GetUserEstampResponse, error)
 }
 
 // UnimplementedUserServiceServer should be embedded to have forward compatible implementations.
@@ -179,8 +179,8 @@ func (UnimplementedUserServiceServer) VerifyEstamp(context.Context, *VerifyEstam
 func (UnimplementedUserServiceServer) ConfirmEstamp(context.Context, *ConfirmEstampRequest) (*ConfirmEstampResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ConfirmEstamp not implemented")
 }
-func (UnimplementedUserServiceServer) FindUserEstamp(context.Context, *FindUserEstampRequest) (*FindUserEstampResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method FindUserEstamp not implemented")
+func (UnimplementedUserServiceServer) GetUserEstamp(context.Context, *GetUserEstampRequest) (*GetUserEstampResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserEstamp not implemented")
 }
 
 // UnsafeUserServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -356,20 +356,20 @@ func _UserService_ConfirmEstamp_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserService_FindUserEstamp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(FindUserEstampRequest)
+func _UserService_GetUserEstamp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserEstampRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserServiceServer).FindUserEstamp(ctx, in)
+		return srv.(UserServiceServer).GetUserEstamp(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/user.UserService/FindUserEstamp",
+		FullMethod: "/user.UserService/GetUserEstamp",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserServiceServer).FindUserEstamp(ctx, req.(*FindUserEstampRequest))
+		return srv.(UserServiceServer).GetUserEstamp(ctx, req.(*GetUserEstampRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -418,8 +418,8 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _UserService_ConfirmEstamp_Handler,
 		},
 		{
-			MethodName: "FindUserEstamp",
-			Handler:    _UserService_FindUserEstamp_Handler,
+			MethodName: "GetUserEstamp",
+			Handler:    _UserService_GetUserEstamp_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
