@@ -29,9 +29,9 @@ type IRepository interface {
 	Verify(string) error
 	Delete(string) error
 	CreateOrUpdate(*user.User) error
-	VerifyEstamp(*user.User, *event.Event) error
-	ConfirmEstamp(*user.User, *event.Event) error
-	GetUserEstamp(*user.User, *[]*event.Event) error
+	VerifyEstamp(string, *user.User, *event.Event) error
+	ConfirmEstamp(string, *user.User, *event.Event) error
+	GetUserEstamp(string, *user.User, *[]*event.Event) error
 }
 
 type IEventRepository interface {
@@ -207,59 +207,48 @@ func (s *Service) Delete(_ context.Context, req *proto.DeleteUserRequest) (res *
 }
 
 func (s *Service) VerifyEstamp(_ context.Context, req *proto.VerifyEstampRequest) (res *proto.VerifyEstampResponse, err error) {
-	var found bool
-	var user user.User
 	var event event.Event
-
-	err = s.repo.FindOne(req.UId, &user)
-	if err != nil {
-		return nil, status.Error(codes.NotFound, "user not found")
-	}
+	var user user.User
 	err = s.eventRepo.FindEventByID(req.EId, &event)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "event not found")
 	}
 
-	err = s.repo.VerifyEstamp(&user, &event)
+	err = s.repo.VerifyEstamp(req.UId, &user, &event)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "something wrong")
 	}
 
-	return &proto.VerifyEstampResponse{Found: found}, nil
+	return &proto.VerifyEstampResponse{Event: EventRawToDto(&event)}, nil
 
 }
 
 func (s *Service) ConfirmEstamp(_ context.Context, req *proto.ConfirmEstampRequest) (res *proto.ConfirmEstampResponse, err error) {
-	var user user.User
 	var event event.Event
-
-	err = s.repo.FindOne(req.UId, &user)
-	if err != nil {
-		return nil, status.Error(codes.NotFound, "user not found")
-	}
+	var user user.User
 	err = s.eventRepo.FindEventByID(req.EId, &event)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "event not found")
 	}
 
-	err = s.repo.ConfirmEstamp(&user, &event)
+	err = s.repo.ConfirmEstamp(req.UId, &user, &event)
 	if err != nil {
-		return nil, status.Error(codes.NotFound, "user not found")
+		return nil, status.Error(codes.NotFound, "something wrong")
 	}
 
-	return &proto.ConfirmEstampResponse{Event: EventRawToDto(&event)}, nil
+	return &proto.ConfirmEstampResponse{}, nil
 }
 
 func (s *Service) GetUserEstamp(_ context.Context, req *proto.GetUserEstampRequest) (res *proto.GetUserEstampResponse, err error) {
 	var user user.User
 	var events []*event.Event
 
-	err = s.repo.FindOne(req.UId, &user)
-	if err != nil {
-		return nil, status.Error(codes.NotFound, "user not found")
-	}
+	//err = s.repo.FindOne(req.UId, &user)
+	//if err != nil {
+	//	return nil, status.Error(codes.NotFound, "user not found")
+	//}
 
-	err = s.repo.GetUserEstamp(&user, &events)
+	err = s.repo.GetUserEstamp(req.UId, &user, &events)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "something wrong")
 	}

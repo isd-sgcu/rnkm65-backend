@@ -128,7 +128,7 @@ message VerifyEstampRequest {
 }
 
 message VerifyEstampResponse {
-  bool found = 1;
+  event.Event event = 1;
 }
 
 // ConfirmEstamp
@@ -138,7 +138,7 @@ message ConfirmEstampRequest {
 }
 
 message ConfirmEstampResponse {
-  event.Event event = 1;
+
 }
 
 // GetUserEstamp

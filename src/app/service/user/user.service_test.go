@@ -161,6 +161,117 @@ func (t *UserServiceTest) SetupTest() {
 	}
 }
 
+// for estamp
+
+func (t *UserServiceTest) TestVerifyEstampSuccess() {
+	want := &proto.VerifyEstampResponse{Event: t.EventDto}
+
+	repo := &mock.RepositoryMock{}
+	fileSrv := &fMock.ServiceMock{}
+	eventSrv := &eMock.RepositoryMock{}
+
+	eventSrv.On("FindEventByID", t.Event.ID.String(), &event.Event{}).Return(t.Event, nil)
+	repo.On("VerifyEstamp", t.User.ID.String(), &user.User{}, t.Event).Return(t.Event, nil)
+
+	srv := NewService(repo, fileSrv, eventSrv)
+	actual, err := srv.VerifyEstamp(context.Background(), &proto.VerifyEstampRequest{
+		UId: t.User.ID.String(),
+		EId: t.Event.ID.String(),
+	})
+
+	assert.Nil(t.T(), err)
+	assert.Equal(t.T(), want, actual)
+}
+
+func (t *UserServiceTest) TestVerifyEstampUserNotFound() {
+	repo := &mock.RepositoryMock{}
+	fileSrv := &fMock.ServiceMock{}
+	eventSrv := &eMock.RepositoryMock{}
+
+	eventSrv.On("FindEventByID", t.Event.ID.String(), &event.Event{}).Return(t.Event, nil)
+	repo.On("VerifyEstamp", t.User.ID.String(), &user.User{}, t.Event).Return(nil, errors.New("user not found"))
+
+	srv := NewService(repo, fileSrv, eventSrv)
+
+	actual, err := srv.VerifyEstamp(context.Background(), &proto.VerifyEstampRequest{
+		UId: t.User.ID.String(),
+		EId: t.Event.ID.String(),
+	})
+
+	st, ok := status.FromError(err)
+
+	assert.True(t.T(), ok)
+	assert.Nil(t.T(), actual)
+	assert.Equal(t.T(), codes.NotFound, st.Code())
+}
+
+func (t *UserServiceTest) TestVerifyEstampEventNotFound() {
+
+	repo := &mock.RepositoryMock{}
+	fileSrv := &fMock.ServiceMock{}
+	eventSrv := &eMock.RepositoryMock{}
+
+	eventSrv.On("FindEventByID", t.Event.ID.String(), &event.Event{}).Return(nil, errors.New("event not found"))
+	repo.On("VerifyEstamp", t.User.ID.String(), &user.User{}, t.Event).Return(nil, errors.New("event not found"))
+
+	srv := NewService(repo, fileSrv, eventSrv)
+	actual, err := srv.VerifyEstamp(context.Background(), &proto.VerifyEstampRequest{
+		UId: t.User.ID.String(),
+		EId: t.Event.ID.String(),
+	})
+
+	st, ok := status.FromError(err)
+
+	assert.True(t.T(), ok)
+	assert.Nil(t.T(), actual)
+	assert.Equal(t.T(), codes.NotFound, st.Code())
+}
+
+// ConfirmEstamp
+
+func (t *UserServiceTest) TestConfirmEstampSuccess() {
+	want := &proto.ConfirmEstampResponse{}
+
+	repo := &mock.RepositoryMock{}
+	fileSrv := &fMock.ServiceMock{}
+	eventSrv := &eMock.RepositoryMock{}
+
+	eventSrv.On("FindEventByID", t.Event.ID.String(), &event.Event{}).Return(t.Event, nil)
+	repo.On("ConfirmEstamp", t.User.ID.String(), &user.User{}, t.Event).Return(nil, nil)
+
+	srv := NewService(repo, fileSrv, eventSrv)
+	actual, err := srv.ConfirmEstamp(context.Background(), &proto.ConfirmEstampRequest{
+		UId: t.User.ID.String(),
+		EId: t.Event.ID.String(),
+	})
+
+	assert.Nil(t.T(), err)
+	assert.Equal(t.T(), want, actual)
+}
+
+func (t *UserServiceTest) TestGetUserEstampSuccess() {
+	eventList := t.createEvent()
+	want := &proto.GetUserEstampResponse{EventList: t.createEventDto(eventList)}
+
+	var eventsIn []*event.Event
+
+	r := mock.RepositoryMock{}
+	r.On("GetUserEstamp", t.User.ID.String(), &user.User{}, &eventsIn).Return(eventList, nil)
+
+	fileSrv := &fMock.ServiceMock{}
+	eventSrv := &eMock.RepositoryMock{}
+
+	srv := NewService(&r, fileSrv, eventSrv)
+	actual, err := srv.GetUserEstamp(context.Background(), &proto.GetUserEstampRequest{
+		UId: t.User.ID.String(),
+	})
+
+	assert.Nil(t.T(), err)
+	assert.Equal(t.T(), want, actual)
+}
+
+/// end of estamp
+
 func (t *UserServiceTest) TestFindOneSuccess() {
 	url := faker.URL()
 
@@ -506,110 +617,6 @@ func (t *UserServiceTest) TestFindByStudentIDNotFound() {
 	assert.True(t.T(), ok)
 	assert.Nil(t.T(), actual)
 	assert.Equal(t.T(), codes.NotFound, st.Code())
-}
-
-func (t *UserServiceTest) TestVerifyEstampSuccess() {
-	want := &proto.VerifyEstampResponse{Found: true}
-
-	repo := &mock.RepositoryMock{}
-
-	repo.On("VerifyEstamp", t.User.ID.String(), t.Event.ID.String()).Return(nil)
-
-	fileSrv := &fMock.ServiceMock{}
-
-	eventSrv := &eMock.RepositoryMock{}
-	srv := NewService(repo, fileSrv, eventSrv)
-	actual, err := srv.VerifyEstamp(context.Background(), &proto.VerifyEstampRequest{
-		UId: t.UserDto.Id,
-		EId: t.EventDto.Id,
-	})
-
-	assert.Nil(t.T(), err)
-	assert.Equal(t.T(), want, actual)
-}
-
-func (t *UserServiceTest) TestVerifyEstampUserNotFound() {
-	repo := &mock.RepositoryMock{}
-
-	repo.On("VerifyEstamp", t.User.ID.String(), t.Event.ID.String()).Return(errors.New("user not found"))
-
-	fileSrv := &fMock.ServiceMock{}
-
-	eventSrv := &eMock.RepositoryMock{}
-	srv := NewService(repo, fileSrv, eventSrv)
-	actual, err := srv.VerifyEstamp(context.Background(), &proto.VerifyEstampRequest{
-		UId: t.UserDto.Id,
-		EId: t.EventDto.Id,
-	})
-	st, ok := status.FromError(err)
-
-	assert.True(t.T(), ok)
-	assert.Nil(t.T(), actual)
-	assert.Equal(t.T(), codes.NotFound, st.Code())
-}
-
-func (t *UserServiceTest) TestVerifyEstampEventNotFound() {
-	repo := &mock.RepositoryMock{}
-
-	repo.On("VerifyEstamp", t.User.ID.String(), t.Event.ID.String()).Return(errors.New("event not found"))
-
-	fileSrv := &fMock.ServiceMock{}
-
-	eventSrv := &eMock.RepositoryMock{}
-	srv := NewService(repo, fileSrv, eventSrv)
-	actual, err := srv.VerifyEstamp(context.Background(), &proto.VerifyEstampRequest{
-		UId: t.UserDto.Id,
-		EId: t.EventDto.Id,
-	})
-	st, ok := status.FromError(err)
-
-	assert.True(t.T(), ok)
-	assert.Nil(t.T(), actual)
-	assert.Equal(t.T(), codes.NotFound, st.Code())
-}
-
-func (t *UserServiceTest) TestConfirmEstampSuccess() {
-	want := &proto.ConfirmEstampResponse{Event: t.EventDto}
-
-	repo := &mock.RepositoryMock{}
-
-	repo.On("ConfirmEstamp", t.User.ID.String(), t.Event.ID.String()).Return(nil)
-
-	fileSrv := &fMock.ServiceMock{}
-
-	eventSrv := &eMock.RepositoryMock{}
-	srv := NewService(repo, fileSrv, eventSrv)
-	actual, err := srv.ConfirmEstamp(context.Background(), &proto.ConfirmEstampRequest{
-		UId: t.UserDto.Id,
-		EId: t.EventDto.Id,
-	})
-
-	assert.Nil(t.T(), err)
-	assert.Equal(t.T(), want, actual)
-}
-
-func (t *UserServiceTest) TestGetUserEstampSuccess() {
-	eventList := t.createEvent()
-
-	want := &proto.GetUserEstampResponse{EventList: t.createEventDto(eventList)}
-
-	var eventsIn []*event.Event
-
-	r := mock.RepositoryMock{}
-	r.On("GetUserEstamp", &eventsIn).Return(eventList, nil)
-
-	fileSrv := &fMock.ServiceMock{}
-	eventSrv := &eMock.RepositoryMock{}
-
-	srv := NewService(&r, fileSrv, eventSrv)
-	actual, err := srv.GetUserEstamp(context.Background(), &proto.GetUserEstampRequest{})
-
-	assert.Nil(t.T(), err)
-	assert.Equal(t.T(), want, actual)
-}
-
-func (t *UserServiceTest) TestGetUserEstampUserNotFound() {
-
 }
 
 func (t *UserServiceTest) createEventDto(in []*event.Event) []*proto.Event {

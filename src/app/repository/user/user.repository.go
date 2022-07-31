@@ -47,17 +47,17 @@ func (r *Repository) Delete(id string) error {
 	return r.db.Where("id = ?", id).Delete(&user.User{}).Error
 }
 
-func (r *Repository) VerifyEstamp(thisUser user.User, thisEvent event.Event) error {
+func (r *Repository) VerifyEstamp(uId string, thisUser *user.User, thisEvent *event.Event) error {
 	//Check if this user has this estamp (Yes/No)
-	return r.db.Model(&thisUser).Association("Events").Find(&thisEvent)
+	return r.db.Model(&thisUser).Where("id = ?", uId).Association("Events").Find(&thisEvent)
 }
 
-func (r *Repository) ConfirmEstamp(thisUser user.User, thisEvent event.Event) error {
+func (r *Repository) ConfirmEstamp(uId string, thisUser *user.User, thisEvent *event.Event) error {
 	//Add this estamp to user
-	return r.db.Model(&thisUser).Association("Events").Append(&thisEvent)
+	return r.db.Model(&thisUser).Where("id = ?", uId).Association("Events").Append(&thisEvent)
 }
 
-func (r *Repository) GetUserEstamp(thisUser user.User, results *[]*event.Event) error {
+func (r *Repository) GetUserEstamp(uId string, thisUser *user.User, results *[]*event.Event) error {
 	//Get all estamp that this user has
-	return r.db.Model(&thisUser).Association("Events").Find(&results)
+	return r.db.Model(&thisUser).Where("id = ?", uId).Association("Events").Find(&results)
 }
