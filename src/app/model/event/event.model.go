@@ -1,9 +1,7 @@
 package event
 
 import (
-	"github.com/google/uuid"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/model"
-	"gorm.io/gorm"
 )
 
 type Event struct {
@@ -14,11 +12,5 @@ type Event struct {
 	DescriptionEN string `json:"description_en"`
 	Code          string `json:"code"`
 	ImageURL      string `json:"image_url"`
-	// Users         []model.Base.user.User `json:"users" gorm:"many2many:event_user"`
-}
-
-func (e *Event) BeforeCreate(_ *gorm.DB) error {
-	e.ID = uuid.New()
-
-	return nil
+	EventType     string `json:"event_type"`
 }

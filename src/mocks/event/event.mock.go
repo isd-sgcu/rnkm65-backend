@@ -54,3 +54,13 @@ func (r *RepositoryMock) Delete(id string) error {
 
 	return args.Error(0)
 }
+
+func (r *RepositoryMock) FindAllEventWithType(eventType string, result *[]*event.Event) error {
+	args := r.Called(result)
+
+	if args.Get(0) != nil {
+		*result = args.Get(0).([]*event.Event)
+	}
+
+	return args.Error(1)
+}

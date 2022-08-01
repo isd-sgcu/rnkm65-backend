@@ -23,12 +23,8 @@ func InitDatabase(conf *config.Database) (db *gorm.DB, err error) {
 	}
 
 	err = db.SetupJoinTable(&group.Group{}, "Baans", &baan_group.BaanGroupSelection{})
-	err = db.AutoMigrate(group.Group{}, user.User{}, event.Event{})
-	if err != nil {
-		return nil, err
-	}
 
-	err = db.AutoMigrate(checkin.Checkin{}, group.Group{}, baan.Baan{}, user.User{})
+	err = db.AutoMigrate(checkin.Checkin{}, group.Group{}, baan.Baan{}, user.User{}, event.Event{})
 	if err != nil {
 		return nil, err
 	}

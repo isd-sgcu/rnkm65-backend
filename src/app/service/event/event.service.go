@@ -24,13 +24,13 @@ type IRepository interface {
 	Create(*event.Event) error
 	Update(string, *event.Event) error
 	Delete(string) error
+	FindAllEventWithType(string, *[]*event.Event) error
 }
 
 func NewService(repo IRepository) *Service {
 	return &Service{repo: repo}
 }
 
-// from getAllBanns
 func (s *Service) FindAllEvent(_ context.Context, req *proto.FindAllEventRequest) (res *proto.FindAllEventResponse, err error) {
 	var events []*event.Event
 
@@ -48,7 +48,6 @@ func (s *Service) FindAllEvent(_ context.Context, req *proto.FindAllEventRequest
 	return &proto.FindAllEventResponse{Event: RawToDtoList(&events)}, nil
 }
 
-// from event.findOne
 func (s *Service) FindEventByID(_ context.Context, req *proto.FindEventByIDRequest) (res *proto.FindEventByIDResponse, err error) {
 	raw := event.Event{}
 
@@ -92,6 +91,16 @@ func (s *Service) Delete(_ context.Context, req *proto.DeleteEventRequest) (res 
 	}
 
 	return &proto.DeleteEventResponse{Success: true}, nil
+}
+
+func (s *Service) FindAllEventWithType(_ context.Context, req *proto.FindAllEventWithTypeRequest) (res *proto.FindAllEventWithTypeResponse, err error) {
+	var events []*event.Event
+	err = s.repo.FindAllEventWithType(req.EventType, &events)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "eventType not found")
+	}
+
+	return &proto.FindAllEventWithTypeResponse{Event: RawToDtoList(&events)}, nil
 }
 
 func DtoToRaw(in *proto.Event) (result *event.Event, err error) {
