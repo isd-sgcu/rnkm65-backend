@@ -47,11 +47,6 @@ func (r *Repository) Delete(id string) error {
 	return r.db.Where("id = ?", id).Delete(&user.User{}).Error
 }
 
-func (r *Repository) VerifyEstamp(uId string, thisUser *user.User, thisEvent *event.Event) error {
-	//Check if this user has this estamp (Yes/No)
-	return r.db.Model(&thisUser).Where("id = ?", uId).Association("Events").Find(&thisEvent)
-}
-
 func (r *Repository) ConfirmEstamp(uId string, thisUser *user.User, thisEvent *event.Event) error {
 	//Add this estamp to user
 	return r.db.Model(&thisUser).Where("id = ?", uId).Association("Events").Append(&thisEvent)

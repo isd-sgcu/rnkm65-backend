@@ -31,7 +31,6 @@ func NewService(repo IRepository) *Service {
 	return &Service{repo: repo}
 }
 
-// from getAllBanns
 func (s *Service) FindAllEvent(_ context.Context, req *proto.FindAllEventRequest) (res *proto.FindAllEventResponse, err error) {
 	var events []*event.Event
 
@@ -49,7 +48,6 @@ func (s *Service) FindAllEvent(_ context.Context, req *proto.FindAllEventRequest
 	return &proto.FindAllEventResponse{Event: RawToDtoList(&events)}, nil
 }
 
-// from event.findOne
 func (s *Service) FindEventByID(_ context.Context, req *proto.FindEventByIDRequest) (res *proto.FindEventByIDResponse, err error) {
 	raw := event.Event{}
 

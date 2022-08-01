@@ -29,7 +29,6 @@ type IRepository interface {
 	Verify(string) error
 	Delete(string) error
 	CreateOrUpdate(*user.User) error
-	VerifyEstamp(string, *user.User, *event.Event) error
 	ConfirmEstamp(string, *user.User, *event.Event) error
 	GetUserEstamp(string, *user.User, *[]*event.Event) error
 }
@@ -208,15 +207,10 @@ func (s *Service) Delete(_ context.Context, req *proto.DeleteUserRequest) (res *
 
 func (s *Service) VerifyEstamp(_ context.Context, req *proto.VerifyEstampRequest) (res *proto.VerifyEstampResponse, err error) {
 	var event event.Event
-	var user user.User
+	
 	err = s.eventRepo.FindEventByID(req.EId, &event)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "event not found")
-	}
-
-	err = s.repo.VerifyEstamp(req.UId, &user, &event)
-	if err != nil {
-		return nil, status.Error(codes.NotFound, "something wrong")
 	}
 
 	return &proto.VerifyEstampResponse{Event: EventRawToDto(&event)}, nil
