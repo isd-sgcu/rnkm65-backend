@@ -10,15 +10,6 @@ type RepositoryMock struct {
 	mock.Mock
 }
 
-func (r *RepositoryMock) VerifyEstamp(uId string, thisUser *user.User, thisEvent *event.Event) error {
-	args := r.Called(uId, thisUser, thisEvent)
-	if args.Get(0) != nil {
-		*thisEvent = *args.Get(0).(*event.Event)
-	}
-
-	return args.Error(1)
-}
-
 func (r *RepositoryMock) ConfirmEstamp(uId string, thisUser *user.User, thisEvent *event.Event) error {
 	args := r.Called(uId, thisUser, thisEvent)
 	if args.Get(0) != nil {

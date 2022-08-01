@@ -12,7 +12,6 @@ service UserService {
   rpc Verify(VerifyUserRequest) returns (VerifyUserResponse){}
   rpc Delete(DeleteUserRequest) returns (DeleteUserResponse){}
   rpc CreateOrUpdate(CreateOrUpdateUserRequest) returns (CreateOrUpdateUserResponse){}
-  rpc VerifyEstamp(VerifyEstampRequest) returns (VerifyEstampResponse){}
   rpc ConfirmEstamp(ConfirmEstampRequest) returns (ConfirmEstampResponse){}
   rpc GetUserEstamp(GetUserEstampRequest) returns (GetUserEstampResponse){}
 }
@@ -119,16 +118,6 @@ message VerifyUserRequest{
 
 message VerifyUserResponse{
   bool success = 1;
-}
-
-// VerifyEstamp
-message VerifyEstampRequest {
-  string uId = 1;
-  string eId = 2;
-}
-
-message VerifyEstampResponse {
-  event.Event event = 1;
 }
 
 // ConfirmEstamp
