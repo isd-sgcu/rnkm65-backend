@@ -90,6 +90,31 @@ func (t *UserServiceTest) SetupTest() {
 		ImageURL:      t.Event.ImageURL,
 	}
 
+	t.Event = &event.Event{
+		Base: model.Base{
+			ID:        uuid.New(),
+			CreatedAt: time.Time{},
+			UpdatedAt: time.Time{},
+			DeletedAt: gorm.DeletedAt{},
+		},
+		NameTH:        faker.Word(),
+		DescriptionTH: faker.Paragraph(),
+		NameEN:        faker.Word(),
+		DescriptionEN: faker.Paragraph(),
+		Code:          faker.Word(),
+		ImageURL:      faker.Paragraph(),
+	}
+
+	t.EventDto = &proto.Event{
+		Id:            t.Event.ID.String(),
+		NameTH:        t.Event.NameTH,
+		DescriptionTH: t.Event.DescriptionTH,
+		NameEN:        t.Event.NameEN,
+		DescriptionEN: t.Event.DescriptionEN,
+		Code:          t.Event.Code,
+		ImageURL:      t.Event.ImageURL,
+	}
+
 	t.UserDto = &proto.User{
 		Id:              t.User.ID.String(),
 		Title:           t.User.Title,
