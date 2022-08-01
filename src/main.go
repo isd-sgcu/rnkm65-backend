@@ -160,8 +160,11 @@ func main() {
 	fileClient := proto.NewFileServiceClient(fileConn)
 	fileSrv := fSrv.NewService(fileClient)
 
+	eventRepo := evtRepo.NewRepository(db)
+	evtSvc := evtService.NewService(eventRepo)
+
 	usrRepo := ur.NewRepository(db)
-	usrSvc := us.NewService(usrRepo, fileSrv)
+	usrSvc := us.NewService(usrRepo, fileSrv, eventRepo)
 
 	ciRepo := cir.NewRepository(db)
 	ciSvc := csr.NewService(ciRepo, cacheRepo, conf.App)
@@ -173,9 +176,6 @@ func main() {
 
 	groupRepo := grpRepo.NewRepository(db)
 	grpSvc := grpService.NewService(groupRepo, usrRepo, baGrpSetRepo, fileSrv, cacheRepo, baRepo, conf.App)
-
-	eventRepo := evtRepo.NewRepository(db)
-	evtSvc := evtService.NewService(eventRepo)
 
 	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
 	proto.RegisterUserServiceServer(grpcServer, usrSvc)
