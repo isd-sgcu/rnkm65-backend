@@ -201,7 +201,11 @@ func (t *UserServiceTest) TestConfirmEstampSuccess() {
 	eventSrv := &eMock.RepositoryMock{}
 
 	eventSrv.On("FindEventByID", t.Event.ID.String(), &event.Event{}).Return(t.Event, nil)
-	repo.On("ConfirmEstamp", t.User.ID.String(), &user.User{}, t.Event).Return(nil, nil)
+	repo.On("ConfirmEstamp", t.User.ID.String(), &user.User{
+		Base: model.Base{
+			ID: t.User.ID,
+		},
+	}, t.Event).Return(nil, nil)
 
 	srv := NewService(repo, fileSrv, eventSrv)
 	actual, err := srv.ConfirmEstamp(context.Background(), &proto.ConfirmEstampRequest{
@@ -220,7 +224,11 @@ func (t *UserServiceTest) TestGetUserEstampSuccess() {
 	var eventsIn []*event.Event
 
 	r := mock.RepositoryMock{}
-	r.On("GetUserEstamp", t.User.ID.String(), &user.User{}, &eventsIn).Return(eventList, nil)
+	r.On("GetUserEstamp", t.User.ID.String(), &user.User{
+		Base: model.Base{
+			ID: t.User.ID,
+		},
+	}, &eventsIn).Return(eventList, nil)
 
 	fileSrv := &fMock.ServiceMock{}
 	eventSrv := &eMock.RepositoryMock{}
