@@ -36,7 +36,6 @@ message User{
   bool canSelectBaan = 17;
   bool isVerify = 18;
   string baanId = 19;
-  
 }
 
 // FindOne

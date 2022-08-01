@@ -2,6 +2,9 @@ package user
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/bxcodec/faker/v3"
 	"github.com/google/uuid"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/model"
@@ -18,8 +21,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
-	"testing"
-	"time"
 )
 
 type UserServiceTest struct {
