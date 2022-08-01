@@ -4,14 +4,14 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	cir "github.com/isd-sgcu/rnkm65-backend/src/app/repository/checkin"
-	evtRepo "github.com/isd-sgcu/rnkm65-backend/src/app/repository/event"
 	bRepo "github.com/isd-sgcu/rnkm65-backend/src/app/repository/baan"
 	bgsRepo "github.com/isd-sgcu/rnkm65-backend/src/app/repository/baan-group-selection"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/repository/cache"
+	cir "github.com/isd-sgcu/rnkm65-backend/src/app/repository/checkin"
 	evtRepo "github.com/isd-sgcu/rnkm65-backend/src/app/repository/event"
 	grpRepo "github.com/isd-sgcu/rnkm65-backend/src/app/repository/group"
 	ur "github.com/isd-sgcu/rnkm65-backend/src/app/repository/user"
+	bSrv "github.com/isd-sgcu/rnkm65-backend/src/app/service/baan"
 	csr "github.com/isd-sgcu/rnkm65-backend/src/app/service/checkin"
 	evtService "github.com/isd-sgcu/rnkm65-backend/src/app/service/event"
 	fSrv "github.com/isd-sgcu/rnkm65-backend/src/app/service/file"
@@ -160,8 +160,11 @@ func main() {
 	fileClient := proto.NewFileServiceClient(fileConn)
 	fileSrv := fSrv.NewService(fileClient)
 
+	eventRepo := evtRepo.NewRepository(db)
+	evtSvc := evtService.NewService(eventRepo)
+
 	usrRepo := ur.NewRepository(db)
-	usrSvc := us.NewService(usrRepo, fileSrv)
+	usrSvc := us.NewService(usrRepo, fileSrv, eventRepo)
 
 	ciRepo := cir.NewRepository(db)
 	ciSvc := csr.NewService(ciRepo, cacheRepo, conf.App)
@@ -173,9 +176,6 @@ func main() {
 
 	groupRepo := grpRepo.NewRepository(db)
 	grpSvc := grpService.NewService(groupRepo, usrRepo, baGrpSetRepo, fileSrv, cacheRepo, baRepo, conf.App)
-
-	eventRepo := evtRepo.NewRepository(db)
-	evtSvc := evtService.NewService(eventRepo)
 
 	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
 	proto.RegisterUserServiceServer(grpcServer, usrSvc)
