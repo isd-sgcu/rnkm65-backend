@@ -38,6 +38,10 @@ type IEventRepository interface {
 	FindAllEvent(result *[]*event.Event) error
 }
 
+type IEventRepository interface {
+	FindEventByID(id string, result *event.Event) error
+}
+
 type IFileService interface {
 	GetSignedUrl(string) (string, error)
 }
@@ -213,6 +217,10 @@ func (s *Service) ConfirmEstamp(_ context.Context, req *proto.ConfirmEstampReque
 	if err != nil {
 		return nil, err
 	}
+	err = s.eventRepo.FindEventByID(req.EId, &event)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "event not found")
+	}
 
 	user := user.User{
 		Base: model.Base{
@@ -228,6 +236,10 @@ func (s *Service) ConfirmEstamp(_ context.Context, req *proto.ConfirmEstampReque
 	err = s.repo.ConfirmEstamp(req.UId, &user, &event)
 	if err != nil {
 		return nil, status.Error(codes.NotFound, "something wrong")
+	}
+	err = s.eventRepo.FindEventByID(req.EId, &event)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "event not found")
 	}
 
 	return &proto.ConfirmEstampResponse{}, nil

@@ -12,6 +12,8 @@ import (
 	grpRepo "github.com/isd-sgcu/rnkm65-backend/src/app/repository/group"
 	ur "github.com/isd-sgcu/rnkm65-backend/src/app/repository/user"
 	bSrv "github.com/isd-sgcu/rnkm65-backend/src/app/service/baan"
+	evtService "github.com/isd-sgcu/rnkm65-backend/src/app/service/event"
+	bSrv "github.com/isd-sgcu/rnkm65-backend/src/app/service/baan"
 	csr "github.com/isd-sgcu/rnkm65-backend/src/app/service/checkin"
 	evtService "github.com/isd-sgcu/rnkm65-backend/src/app/service/event"
 	fSrv "github.com/isd-sgcu/rnkm65-backend/src/app/service/file"
