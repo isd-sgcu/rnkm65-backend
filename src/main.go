@@ -116,7 +116,7 @@ func main() {
 	if err != nil {
 		log.Fatal().
 			Err(err).
-			Str("service", "auth").
+			Str("service", "backend").
 			Msg("Failed to start service")
 	}
 
@@ -124,7 +124,7 @@ func main() {
 	if err != nil {
 		log.Fatal().
 			Err(err).
-			Str("service", "auth").
+			Str("service", "backend").
 			Msg("Failed to start service")
 	}
 
@@ -132,7 +132,7 @@ func main() {
 	if err != nil {
 		log.Fatal().
 			Err(err).
-			Str("service", "auth").
+			Str("service", "backend").
 			Msg("Failed to start service")
 	}
 
@@ -142,7 +142,7 @@ func main() {
 	if err != nil {
 		log.Fatal().
 			Err(err).
-			Str("service", "auth").
+			Str("service", "backend").
 			Msg("Failed to start service")
 	}
 
@@ -188,13 +188,13 @@ func main() {
 	reflection.Register(grpcServer)
 	go func() {
 		log.Info().
-			Str("service", "auth").
+			Str("service", "backend").
 			Msgf("RNKM65 backend starting at port %v", conf.App.Port)
 
 		if err = grpcServer.Serve(lis); err != nil {
 			log.Fatal().
 				Err(err).
-				Str("service", "auth").
+				Str("service", "backend").
 				Msg("Failed to start service")
 		}
 	}()
@@ -220,10 +220,10 @@ func main() {
 
 	grpcServer.GracefulStop()
 	log.Info().
-		Str("service", "auth").
+		Str("service", "backend").
 		Msg("Closing the listener")
 	lis.Close()
 	log.Info().
-		Str("service", "auth").
+		Str("service", "backend").
 		Msg("End of Program")
 }
