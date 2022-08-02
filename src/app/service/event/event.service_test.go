@@ -32,6 +32,8 @@ func TestEventService(t *testing.T) {
 }
 
 func (t *EventServiceTest) SetupTest() {
+	order, _ := faker.RandomInt(1, 10)
+
 	t.Event = &event.Event{
 		Base: model.Base{
 			ID:        uuid.New(),
@@ -45,6 +47,7 @@ func (t *EventServiceTest) SetupTest() {
 		DescriptionEN: faker.Paragraph(),
 		Code:          faker.Word(),
 		ImageURL:      faker.Paragraph(),
+		Order:         order[0],
 	}
 
 	t.EventDto = &proto.Event{
@@ -55,6 +58,7 @@ func (t *EventServiceTest) SetupTest() {
 		DescriptionEN: t.Event.DescriptionEN,
 		Code:          t.Event.Code,
 		ImageURL:      t.Event.ImageURL,
+		Order:         int32(t.Event.Order),
 	}
 
 	t.CreateEventReqMock = &proto.CreateEventRequest{
@@ -65,6 +69,7 @@ func (t *EventServiceTest) SetupTest() {
 			DescriptionEN: t.Event.DescriptionEN,
 			Code:          t.Event.Code,
 			ImageURL:      t.Event.ImageURL,
+			Order:         int32(t.Event.Order),
 		},
 	}
 
@@ -77,6 +82,7 @@ func (t *EventServiceTest) SetupTest() {
 			DescriptionEN: t.Event.DescriptionEN,
 			Code:          t.Event.Code,
 			ImageURL:      t.Event.ImageURL,
+			Order:         int32(t.Event.Order),
 		},
 	}
 }
@@ -183,6 +189,7 @@ func (t *EventServiceTest) TestCreateSuccess() {
 		DescriptionEN: t.Event.DescriptionEN,
 		Code:          t.Event.Code,
 		ImageURL:      t.Event.ImageURL,
+		Order:         t.Event.Order,
 	}
 
 	repo.On("Create", in).Return(t.Event, nil)
@@ -204,6 +211,7 @@ func (t *EventServiceTest) TestCreateInternalErr() {
 		DescriptionEN: t.Event.DescriptionEN,
 		Code:          t.Event.Code,
 		ImageURL:      t.Event.ImageURL,
+		Order:         t.Event.Order,
 	}
 
 	repo.On("Create", in).Return(nil, errors.New("something wrong"))
