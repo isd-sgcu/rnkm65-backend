@@ -7,9 +7,13 @@ import (
 	bRepo "github.com/isd-sgcu/rnkm65-backend/src/app/repository/baan"
 	bgsRepo "github.com/isd-sgcu/rnkm65-backend/src/app/repository/baan-group-selection"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/repository/cache"
+	cir "github.com/isd-sgcu/rnkm65-backend/src/app/repository/checkin"
+	evtRepo "github.com/isd-sgcu/rnkm65-backend/src/app/repository/event"
 	grpRepo "github.com/isd-sgcu/rnkm65-backend/src/app/repository/group"
 	ur "github.com/isd-sgcu/rnkm65-backend/src/app/repository/user"
 	bSrv "github.com/isd-sgcu/rnkm65-backend/src/app/service/baan"
+	csr "github.com/isd-sgcu/rnkm65-backend/src/app/service/checkin"
+	evtService "github.com/isd-sgcu/rnkm65-backend/src/app/service/event"
 	fSrv "github.com/isd-sgcu/rnkm65-backend/src/app/service/file"
 	grpService "github.com/isd-sgcu/rnkm65-backend/src/app/service/group"
 	us "github.com/isd-sgcu/rnkm65-backend/src/app/service/user"
@@ -111,7 +115,7 @@ func main() {
 	if err != nil {
 		log.Fatal().
 			Err(err).
-			Str("service", "auth").
+			Str("service", "backend").
 			Msg("Failed to start service")
 	}
 
@@ -119,7 +123,7 @@ func main() {
 	if err != nil {
 		log.Fatal().
 			Err(err).
-			Str("service", "auth").
+			Str("service", "backend").
 			Msg("Failed to start service")
 	}
 
@@ -127,7 +131,7 @@ func main() {
 	if err != nil {
 		log.Fatal().
 			Err(err).
-			Str("service", "auth").
+			Str("service", "backend").
 			Msg("Failed to start service")
 	}
 
@@ -137,7 +141,7 @@ func main() {
 	if err != nil {
 		log.Fatal().
 			Err(err).
-			Str("service", "auth").
+			Str("service", "backend").
 			Msg("Failed to start service")
 	}
 
@@ -156,8 +160,14 @@ func main() {
 	fileClient := proto.NewFileServiceClient(fileConn)
 	fileSrv := fSrv.NewService(fileClient)
 
+	eventRepo := evtRepo.NewRepository(db)
+	evtSvc := evtService.NewService(eventRepo)
+
 	usrRepo := ur.NewRepository(db)
-	usrSvc := us.NewService(usrRepo, fileSrv)
+	usrSvc := us.NewService(usrRepo, fileSrv, eventRepo)
+
+	ciRepo := cir.NewRepository(db)
+	ciSvc := csr.NewService(ciRepo, cacheRepo, conf.App)
 
 	baRepo := bRepo.NewRepository(db)
 	baSrv := bSrv.NewService(baRepo, cacheRepo, conf.App)
@@ -169,19 +179,21 @@ func main() {
 
 	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
 	proto.RegisterUserServiceServer(grpcServer, usrSvc)
+	proto.RegisterCheckinServiceServer(grpcServer, ciSvc)
 	proto.RegisterBaanServiceServer(grpcServer, baSrv)
 	proto.RegisterGroupServiceServer(grpcServer, grpSvc)
 
+	proto.RegisterEventServiceServer(grpcServer, evtSvc)
 	reflection.Register(grpcServer)
 	go func() {
 		log.Info().
-			Str("service", "auth").
+			Str("service", "backend").
 			Msgf("RNKM65 backend starting at port %v", conf.App.Port)
 
 		if err = grpcServer.Serve(lis); err != nil {
 			log.Fatal().
 				Err(err).
-				Str("service", "auth").
+				Str("service", "backend").
 				Msg("Failed to start service")
 		}
 	}()
@@ -207,10 +219,10 @@ func main() {
 
 	grpcServer.GracefulStop()
 	log.Info().
-		Str("service", "auth").
+		Str("service", "backend").
 		Msg("Closing the listener")
 	lis.Close()
 	log.Info().
-		Str("service", "auth").
+		Str("service", "backend").
 		Msg("End of Program")
 }

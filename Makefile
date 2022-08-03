@@ -2,7 +2,9 @@ proto:
 	protoc --proto_path=src/proto --go_out=. --go-grpc_out=require_unimplemented_servers=false:. user.proto
 	protoc --proto_path=src/proto --go_out=. --go-grpc_out=require_unimplemented_servers=false:. group.proto
 	protoc --proto_path=src/proto --go_out=. --go-grpc_out=require_unimplemented_servers=false:. file.proto
+	protoc --proto_path=src/proto --go_out=. --go-grpc_out=require_unimplemented_servers=false:. checkin.proto
 	protoc --proto_path=src/proto --go_out=. --go-grpc_out=require_unimplemented_servers=false:. baan.proto
+	protoc --proto_path=src/proto --go_out=. --go-grpc_out=require_unimplemented_servers=false:. event.proto
 
 test:
 	go vet ./...

@@ -2,11 +2,16 @@ package user
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/bxcodec/faker/v3"
 	"github.com/google/uuid"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/model"
+	"github.com/isd-sgcu/rnkm65-backend/src/app/model/event"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/model/user"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/utils"
+	eMock "github.com/isd-sgcu/rnkm65-backend/src/mocks/event"
 	fMock "github.com/isd-sgcu/rnkm65-backend/src/mocks/file"
 	mock "github.com/isd-sgcu/rnkm65-backend/src/mocks/user"
 	"github.com/isd-sgcu/rnkm65-backend/src/proto"
@@ -16,8 +21,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
-	"testing"
-	"time"
 )
 
 type UserServiceTest struct {
@@ -27,6 +30,8 @@ type UserServiceTest struct {
 	UserDto           *proto.User
 	CreateUserReqMock *proto.CreateUserRequest
 	UpdateUserReqMock *proto.UpdateUserRequest
+	Event             *event.Event
+	EventDto          *proto.Event
 }
 
 func TestUserService(t *testing.T) {
@@ -55,9 +60,85 @@ func (t *UserServiceTest) SetupTest() {
 		FoodRestriction: faker.Word(),
 		AllergyMedicine: faker.Word(),
 		Disease:         faker.Word(),
-		GroupID:         utils.UUIDAdr(uuid.New()),
 		CanSelectBaan:   utils.BoolAdr(true),
 		IsVerify:        utils.BoolAdr(true),
+		GroupID:         utils.UUIDAdr(uuid.New()),
+		BaanID:          utils.UUIDAdr(uuid.New()),
+	}
+
+	t.Event = &event.Event{
+		Base: model.Base{
+			ID:        uuid.New(),
+			CreatedAt: time.Time{},
+			UpdatedAt: time.Time{},
+			DeletedAt: gorm.DeletedAt{},
+		},
+		NameTH:        faker.Word(),
+		DescriptionTH: faker.Paragraph(),
+		NameEN:        faker.Word(),
+		DescriptionEN: faker.Paragraph(),
+		Code:          faker.Word(),
+		ImageURL:      faker.Paragraph(),
+	}
+
+	t.EventDto = &proto.Event{
+		Id:            t.Event.ID.String(),
+		NameTH:        t.Event.NameTH,
+		DescriptionTH: t.Event.DescriptionTH,
+		NameEN:        t.Event.NameEN,
+		DescriptionEN: t.Event.DescriptionEN,
+		Code:          t.Event.Code,
+		ImageURL:      t.Event.ImageURL,
+	}
+
+	t.Event = &event.Event{
+		Base: model.Base{
+			ID:        uuid.New(),
+			CreatedAt: time.Time{},
+			UpdatedAt: time.Time{},
+			DeletedAt: gorm.DeletedAt{},
+		},
+		NameTH:        faker.Word(),
+		DescriptionTH: faker.Paragraph(),
+		NameEN:        faker.Word(),
+		DescriptionEN: faker.Paragraph(),
+		Code:          faker.Word(),
+		ImageURL:      faker.Paragraph(),
+	}
+
+	t.EventDto = &proto.Event{
+		Id:            t.Event.ID.String(),
+		NameTH:        t.Event.NameTH,
+		DescriptionTH: t.Event.DescriptionTH,
+		NameEN:        t.Event.NameEN,
+		DescriptionEN: t.Event.DescriptionEN,
+		Code:          t.Event.Code,
+		ImageURL:      t.Event.ImageURL,
+	}
+
+	t.Event = &event.Event{
+		Base: model.Base{
+			ID:        uuid.New(),
+			CreatedAt: time.Time{},
+			UpdatedAt: time.Time{},
+			DeletedAt: gorm.DeletedAt{},
+		},
+		NameTH:        faker.Word(),
+		DescriptionTH: faker.Paragraph(),
+		NameEN:        faker.Word(),
+		DescriptionEN: faker.Paragraph(),
+		Code:          faker.Word(),
+		ImageURL:      faker.Paragraph(),
+	}
+
+	t.EventDto = &proto.Event{
+		Id:            t.Event.ID.String(),
+		NameTH:        t.Event.NameTH,
+		DescriptionTH: t.Event.DescriptionTH,
+		NameEN:        t.Event.NameEN,
+		DescriptionEN: t.Event.DescriptionEN,
+		Code:          t.Event.Code,
+		ImageURL:      t.Event.ImageURL,
 	}
 
 	t.UserDto = &proto.User{
@@ -78,6 +159,7 @@ func (t *UserServiceTest) SetupTest() {
 		Disease:         t.User.Disease,
 		CanSelectBaan:   *t.User.CanSelectBaan,
 		IsVerify:        *t.User.IsVerify,
+		BaanId:          t.User.BaanID.String(),
 	}
 
 	t.CreateUserReqMock = &proto.CreateUserRequest{
@@ -98,7 +180,7 @@ func (t *UserServiceTest) SetupTest() {
 			Disease:         t.User.Disease,
 			CanSelectBaan:   *t.User.CanSelectBaan,
 			IsVerify:        *t.User.IsVerify,
-			GroupId:         t.User.GroupID.String(),
+			BaanId:          t.User.BaanID.String(),
 		},
 	}
 
@@ -132,6 +214,61 @@ func (t *UserServiceTest) SetupTest() {
 	}
 }
 
+// for estamp
+
+// ConfirmEstamp
+
+func (t *UserServiceTest) TestConfirmEstampSuccess() {
+	want := &proto.ConfirmEstampResponse{}
+
+	repo := &mock.RepositoryMock{}
+	fileSrv := &fMock.ServiceMock{}
+	eventSrv := &eMock.RepositoryMock{}
+
+	eventSrv.On("FindEventByID", t.Event.ID.String(), &event.Event{}).Return(t.Event, nil)
+	repo.On("ConfirmEstamp", t.User.ID.String(), &user.User{
+		Base: model.Base{
+			ID: t.User.ID,
+		},
+	}, t.Event).Return(nil, nil)
+
+	srv := NewService(repo, fileSrv, eventSrv)
+	actual, err := srv.ConfirmEstamp(context.Background(), &proto.ConfirmEstampRequest{
+		UId: t.User.ID.String(),
+		EId: t.Event.ID.String(),
+	})
+
+	assert.Nil(t.T(), err)
+	assert.Equal(t.T(), want, actual)
+}
+
+func (t *UserServiceTest) TestGetUserEstampSuccess() {
+	eventList := t.createEvent()
+	want := &proto.GetUserEstampResponse{EventList: t.createEventDto(eventList)}
+
+	var eventsIn []*event.Event
+
+	r := mock.RepositoryMock{}
+	r.On("GetUserEstamp", t.User.ID.String(), &user.User{
+		Base: model.Base{
+			ID: t.User.ID,
+		},
+	}, &eventsIn).Return(eventList, nil)
+
+	fileSrv := &fMock.ServiceMock{}
+	eventSrv := &eMock.RepositoryMock{}
+
+	srv := NewService(&r, fileSrv, eventSrv)
+	actual, err := srv.GetUserEstamp(context.Background(), &proto.GetUserEstampRequest{
+		UId: t.User.ID.String(),
+	})
+
+	assert.Nil(t.T(), err)
+	assert.Equal(t.T(), want, actual)
+}
+
+/// end of estamp
+
 func (t *UserServiceTest) TestFindOneSuccess() {
 	url := faker.URL()
 
@@ -145,7 +282,8 @@ func (t *UserServiceTest) TestFindOneSuccess() {
 	fileSrv := &fMock.ServiceMock{}
 	fileSrv.On("GetSignedUrl", t.User.ID.String()).Return(url, nil)
 
-	srv := NewService(repo, fileSrv)
+	eventSrv := &eMock.RepositoryMock{}
+	srv := NewService(repo, fileSrv, eventSrv)
 
 	actual, err := srv.FindOne(context.Background(), &proto.FindOneUserRequest{Id: t.User.ID.String()})
 
@@ -160,7 +298,8 @@ func (t *UserServiceTest) TestFindOneSignUrlErr() {
 	fileSrv := &fMock.ServiceMock{}
 	fileSrv.On("GetSignedUrl", t.User.ID.String()).Return("", status.Error(codes.Unavailable, "Cannot get signed url"))
 
-	srv := NewService(repo, fileSrv)
+	eventSrv := &eMock.RepositoryMock{}
+	srv := NewService(repo, fileSrv, eventSrv)
 
 	actual, err := srv.FindOne(context.Background(), &proto.FindOneUserRequest{Id: t.User.ID.String()})
 
@@ -179,7 +318,8 @@ func (t *UserServiceTest) TestFindOneSignUrlNotFound() {
 	fileSrv := &fMock.ServiceMock{}
 	fileSrv.On("GetSignedUrl", t.User.ID.String()).Return("", status.Error(codes.NotFound, "Not found file"))
 
-	srv := NewService(repo, fileSrv)
+	eventSrv := &eMock.RepositoryMock{}
+	srv := NewService(repo, fileSrv, eventSrv)
 
 	actual, err := srv.FindOne(context.Background(), &proto.FindOneUserRequest{Id: t.User.ID.String()})
 
@@ -193,7 +333,8 @@ func (t *UserServiceTest) TestFindOneNotFound() {
 
 	fileSrv := &fMock.ServiceMock{}
 
-	srv := NewService(repo, fileSrv)
+	eventSrv := &eMock.RepositoryMock{}
+	srv := NewService(repo, fileSrv, eventSrv)
 
 	actual, err := srv.FindOne(context.Background(), &proto.FindOneUserRequest{Id: t.User.ID.String()})
 
@@ -225,14 +366,15 @@ func (t *UserServiceTest) TestCreateSuccess() {
 		AllergyMedicine: t.User.AllergyMedicine,
 		Disease:         t.User.Disease,
 		CanSelectBaan:   t.User.CanSelectBaan,
-		GroupID:         t.User.GroupID,
+		BaanID:          t.User.BaanID,
 	}
 
 	repo.On("Create", in).Return(t.User, nil)
 
 	fileSrv := &fMock.ServiceMock{}
 
-	srv := NewService(repo, fileSrv)
+	eventSrv := &eMock.RepositoryMock{}
+	srv := NewService(repo, fileSrv, eventSrv)
 
 	actual, err := srv.Create(context.Background(), t.CreateUserReqMock)
 
@@ -259,14 +401,15 @@ func (t *UserServiceTest) TestCreateInternalErr() {
 		AllergyMedicine: t.User.AllergyMedicine,
 		Disease:         t.User.Disease,
 		CanSelectBaan:   t.User.CanSelectBaan,
-		GroupID:         t.User.GroupID,
+		BaanID:          t.User.BaanID,
 	}
 
 	repo.On("Create", in).Return(nil, errors.New("something wrong"))
 
 	fileSrv := &fMock.ServiceMock{}
 
-	srv := NewService(repo, fileSrv)
+	eventSrv := &eMock.RepositoryMock{}
+	srv := NewService(repo, fileSrv, eventSrv)
 
 	actual, err := srv.Create(context.Background(), t.CreateUserReqMock)
 
@@ -286,7 +429,8 @@ func (t *UserServiceTest) TestVerifySuccess() {
 
 	fileSrv := &fMock.ServiceMock{}
 
-	srv := NewService(repo, fileSrv)
+	eventSrv := &eMock.RepositoryMock{}
+	srv := NewService(repo, fileSrv, eventSrv)
 	actual, err := srv.Verify(context.Background(), &proto.VerifyUserRequest{StudentId: t.UserDto.Id})
 
 	assert.Nil(t.T(), err)
@@ -300,7 +444,8 @@ func (t *UserServiceTest) TestVerifyNotFound() {
 
 	fileSrv := &fMock.ServiceMock{}
 
-	srv := NewService(repo, fileSrv)
+	eventSrv := &eMock.RepositoryMock{}
+	srv := NewService(repo, fileSrv, eventSrv)
 	actual, err := srv.Verify(context.Background(), &proto.VerifyUserRequest{StudentId: t.UserDto.Id})
 
 	st, ok := status.FromError(err)
@@ -319,7 +464,8 @@ func (t *UserServiceTest) TestUpdateSuccess() {
 
 	fileSrv := &fMock.ServiceMock{}
 
-	srv := NewService(repo, fileSrv)
+	eventSrv := &eMock.RepositoryMock{}
+	srv := NewService(repo, fileSrv, eventSrv)
 	actual, err := srv.Update(context.Background(), t.UpdateUserReqMock)
 
 	assert.Nil(t.T(), err)
@@ -332,7 +478,8 @@ func (t *UserServiceTest) TestUpdateNotFound() {
 
 	fileSrv := &fMock.ServiceMock{}
 
-	srv := NewService(repo, fileSrv)
+	eventSrv := &eMock.RepositoryMock{}
+	srv := NewService(repo, fileSrv, eventSrv)
 	actual, err := srv.Update(context.Background(), t.UpdateUserReqMock)
 
 	st, ok := status.FromError(err)
@@ -351,7 +498,8 @@ func (t *UserServiceTest) TestDeleteSuccess() {
 
 	fileSrv := &fMock.ServiceMock{}
 
-	srv := NewService(repo, fileSrv)
+	eventSrv := &eMock.RepositoryMock{}
+	srv := NewService(repo, fileSrv, eventSrv)
 	actual, err := srv.Delete(context.Background(), &proto.DeleteUserRequest{Id: t.UserDto.Id})
 
 	assert.Nil(t.T(), err)
@@ -365,7 +513,8 @@ func (t *UserServiceTest) TestDeleteNotFound() {
 
 	fileSrv := &fMock.ServiceMock{}
 
-	srv := NewService(repo, fileSrv)
+	eventSrv := &eMock.RepositoryMock{}
+	srv := NewService(repo, fileSrv, eventSrv)
 	actual, err := srv.Delete(context.Background(), &proto.DeleteUserRequest{Id: t.UserDto.Id})
 
 	st, ok := status.FromError(err)
@@ -386,7 +535,8 @@ func (t *UserServiceTest) TestCreateOrUpdateSuccess() {
 
 	fileSrv := &fMock.ServiceMock{}
 
-	srv := NewService(repo, fileSrv)
+	eventSrv := &eMock.RepositoryMock{}
+	srv := NewService(repo, fileSrv, eventSrv)
 	actual, err := srv.CreateOrUpdate(context.Background(), &proto.CreateOrUpdateUserRequest{User: t.UserDto})
 
 	assert.Nil(t.T(), err)
@@ -402,7 +552,8 @@ func (t *UserServiceTest) TestCreateOrUpdateMalformedID() {
 
 	fileSrv := &fMock.ServiceMock{}
 
-	srv := NewService(repo, fileSrv)
+	eventSrv := &eMock.RepositoryMock{}
+	srv := NewService(repo, fileSrv, eventSrv)
 	actual, err := srv.CreateOrUpdate(context.Background(), &proto.CreateOrUpdateUserRequest{User: t.UserDto})
 
 	st, ok := status.FromError(err)
@@ -421,7 +572,8 @@ func (t *UserServiceTest) TestCreateOrUpdateInternalErr() {
 
 	fileSrv := &fMock.ServiceMock{}
 
-	srv := NewService(repo, fileSrv)
+	eventSrv := &eMock.RepositoryMock{}
+	srv := NewService(repo, fileSrv, eventSrv)
 	actual, err := srv.CreateOrUpdate(context.Background(), &proto.CreateOrUpdateUserRequest{User: t.UserDto})
 
 	st, ok := status.FromError(err)
@@ -439,7 +591,8 @@ func (t *UserServiceTest) TestFindByStudentIDSuccess() {
 
 	fileSrv := &fMock.ServiceMock{}
 
-	srv := NewService(repo, fileSrv)
+	eventSrv := &eMock.RepositoryMock{}
+	srv := NewService(repo, fileSrv, eventSrv)
 	actual, err := srv.FindByStudentID(context.Background(), &proto.FindByStudentIDUserRequest{StudentId: t.UserDto.StudentID})
 
 	assert.Nil(t.T(), err)
@@ -453,11 +606,54 @@ func (t *UserServiceTest) TestFindByStudentIDNotFound() {
 
 	fileSrv := &fMock.ServiceMock{}
 
-	srv := NewService(repo, fileSrv)
+	eventSrv := &eMock.RepositoryMock{}
+	srv := NewService(repo, fileSrv, eventSrv)
 	actual, err := srv.FindByStudentID(context.Background(), &proto.FindByStudentIDUserRequest{StudentId: t.UserDto.StudentID})
 
 	st, ok := status.FromError(err)
 	assert.True(t.T(), ok)
 	assert.Nil(t.T(), actual)
 	assert.Equal(t.T(), codes.NotFound, st.Code())
+}
+
+func (t *UserServiceTest) createEventDto(in []*event.Event) []*proto.Event {
+	var result []*proto.Event
+
+	for _, e := range in {
+		r := &proto.Event{
+			Id:            e.ID.String(),
+			NameTH:        e.NameTH,
+			DescriptionTH: e.DescriptionTH,
+			NameEN:        e.NameEN,
+			DescriptionEN: e.DescriptionEN,
+			Code:          e.Code,
+			ImageURL:      e.ImageURL,
+		}
+
+		result = append(result, r)
+	}
+
+	return result
+}
+
+func (t *UserServiceTest) createEvent() []*event.Event {
+	var result []*event.Event
+
+	for i := 0; i <= 5; i++ {
+		r := &event.Event{
+			Base: model.Base{
+				ID: uuid.New(),
+			},
+			NameTH:        faker.Word(),
+			DescriptionTH: faker.Paragraph(),
+			NameEN:        faker.Word(),
+			DescriptionEN: faker.Paragraph(),
+			Code:          faker.Word(),
+			ImageURL:      faker.Paragraph(),
+		}
+
+		result = append(result, r)
+	}
+
+	return result
 }

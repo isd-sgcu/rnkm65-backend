@@ -3,11 +3,14 @@ package user
 import (
 	"github.com/google/uuid"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/model"
+	"github.com/isd-sgcu/rnkm65-backend/src/app/model/event"
 	"gorm.io/gorm"
+	"github.com/isd-sgcu/rnkm65-backend/src/app/model/checkin"
 )
 
 type User struct {
 	model.Base
+	Checkin         []*checkin.Checkin
 	Title           string     `json:"title" gorm:"type:VARCHAR(10)"`
 	Firstname       string     `json:"firstname" gorm:"type:tinytext"`
 	Lastname        string     `json:"lastname" gorm:"type:tinytext"`
@@ -25,6 +28,7 @@ type User struct {
 	CanSelectBaan   *bool      `json:"can_select_baan"`
 	IsVerify        *bool      `json:"is_verify"`
 	GroupID         *uuid.UUID `json:"group_id" gorm:"index"`
+	Events          []*event.Event `json:"events" gorm:"many2many:event_user"`
 	BaanID          *uuid.UUID `json:"baan_id" gorm:"index"`
 }
 
