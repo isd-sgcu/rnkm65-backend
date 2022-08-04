@@ -6,8 +6,10 @@ import (
 	"github.com/isd-sgcu/rnkm65-backend/src/app/model"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/model/event"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/model/user"
+	eventSrv "github.com/isd-sgcu/rnkm65-backend/src/app/service/event"
 	"github.com/isd-sgcu/rnkm65-backend/src/app/utils"
 	"github.com/isd-sgcu/rnkm65-backend/src/proto"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -26,7 +28,7 @@ type IRepository interface {
 	FindByStudentID(string, *user.User) error
 	Create(*user.User) error
 	Update(string, *user.User) error
-	Verify(string) error
+	Verify(string, string) error
 	Delete(string) error
 	CreateOrUpdate(*user.User) error
 	ConfirmEstamp(string, *user.User, *event.Event) error
@@ -154,21 +156,44 @@ func (s *Service) CreateOrUpdate(_ context.Context, req *proto.CreateOrUpdateUse
 }
 
 func (s *Service) Verify(_ context.Context, req *proto.VerifyUserRequest) (res *proto.VerifyUserResponse, err error) {
-	err = s.repo.Verify(req.StudentId)
-	if err != nil {
+	verify := GetColumnName(req.VerifyType)
+
+	if verify == "" {
 		log.Error().Err(err).
 			Str("service", "user").
 			Str("module", "verify").
+			Str("type", req.VerifyType).
 			Str("student_id", req.StudentId).
-			Msgf("Cannot verify (not found)")
-		return nil, status.Error(codes.NotFound, "user not found")
+			Msgf("invalid type")
+		return nil, status.Error(codes.InvalidArgument, "invalid type")
+	}
+
+	err = s.repo.Verify(req.StudentId, verify)
+	if err != nil {
+		if errors.Is(gorm.ErrRecordNotFound, err) {
+			log.Error().Err(err).
+				Str("service", "user").
+				Str("module", "verify").
+				Str("type", req.VerifyType).
+				Str("student_id", req.StudentId).
+				Msgf("Cannot verify (not found)")
+			return nil, status.Error(codes.NotFound, "user not found")
+		}
+		log.Error().Err(err).
+			Str("service", "user").
+			Str("module", "verify").
+			Str("type", req.VerifyType).
+			Str("student_id", req.StudentId).
+			Msgf("Cannot verify")
+		return nil, status.Error(codes.Internal, "something wrong")
 	}
 
 	log.Info().
 		Str("service", "user").
 		Str("module", "create or update").
+		Str("type", req.VerifyType).
 		Str("student_id", req.StudentId).
-		Msg("Successfully create or update the user")
+		Msg("Successfully verify user")
 
 	return &proto.VerifyUserResponse{Success: true}, nil
 }
@@ -209,9 +234,15 @@ func (s *Service) ConfirmEstamp(_ context.Context, req *proto.ConfirmEstampReque
 	var event event.Event
 
 	uid, err := uuid.Parse(req.UId)
-
 	if err != nil {
-		return nil, err
+		log.Error().
+			Err(err).
+			Str("service", "user").
+			Str("module", "confirm estamp").
+			Str("user_id", req.UId).
+			Msg("Invalid id")
+
+		return nil, status.Error(codes.InvalidArgument, "Invalid id")
 	}
 
 	user := user.User{
@@ -222,22 +253,71 @@ func (s *Service) ConfirmEstamp(_ context.Context, req *proto.ConfirmEstampReque
 
 	err = s.eventRepo.FindEventByID(req.EId, &event)
 	if err != nil {
-		return nil, status.Error(codes.NotFound, "event not found")
+
+		if errors.Is(gorm.ErrRecordNotFound, err) {
+			log.Error().
+				Err(err).
+				Str("service", "user").
+				Str("module", "confirm estamp").
+				Str("user_id", req.UId).
+				Msg("Not found event")
+
+			return nil, status.Error(codes.NotFound, "Not found event")
+		}
+
+		log.Error().
+			Err(err).
+			Str("service", "user").
+			Str("module", "confirm estamp").
+			Str("user_id", req.UId).
+			Msg("Error while connecting to database")
+
+		return nil, status.Error(codes.Internal, "something wrong")
 	}
 
 	err = s.repo.ConfirmEstamp(req.UId, &user, &event)
 	if err != nil {
-		return nil, status.Error(codes.NotFound, "something wrong")
+		if errors.Is(gorm.ErrRecordNotFound, err) {
+			log.Error().
+				Err(err).
+				Str("service", "user").
+				Str("module", "confirm estamp").
+				Str("user_id", req.UId).
+				Msg("Not found eStamp")
+
+			return nil, status.Error(codes.NotFound, "Not found estamp")
+		}
+
+		log.Error().
+			Err(err).
+			Str("service", "user").
+			Str("module", "confirm estamp").
+			Str("user_id", req.UId).
+			Msg("Error while connecting to database")
+
+		return nil, status.Error(codes.Internal, "something wrong")
 	}
+
+	log.Info().
+		Str("service", "user").
+		Str("module", "confirm estamp").
+		Str("user_id", req.UId).
+		Msg("Successfully verify user")
 
 	return &proto.ConfirmEstampResponse{}, nil
 }
 
 func (s *Service) GetUserEstamp(_ context.Context, req *proto.GetUserEstampRequest) (res *proto.GetUserEstampResponse, err error) {
 	uid, err := uuid.Parse(req.UId)
-
 	if err != nil {
-		return nil, err
+		log.Error().
+			Err(err).
+			Str("service", "user").
+			Str("module", "confirm estamp").
+			Str("user_id", req.UId).
+			Msg("Invalid id")
+
+		return nil, status.Error(codes.InvalidArgument, "Invalid id")
 	}
 
 	user := user.User{
@@ -250,11 +330,35 @@ func (s *Service) GetUserEstamp(_ context.Context, req *proto.GetUserEstampReque
 
 	err = s.repo.GetUserEstamp(req.UId, &user, &events)
 	if err != nil {
-		return nil, status.Error(codes.NotFound, "something wrong")
+		if errors.Is(gorm.ErrRecordNotFound, err) {
+			log.Error().
+				Err(err).
+				Str("service", "user").
+				Str("module", "get user estamp").
+				Str("user_id", req.UId).
+				Msg("Not found user")
+
+			return nil, status.Error(codes.NotFound, "Not found user")
+		}
+
+		log.Error().
+			Err(err).
+			Str("service", "user").
+			Str("module", "get user estamp").
+			Str("user_id", req.UId).
+			Msg("Error while connecting to database")
+
+		return nil, status.Error(codes.Internal, "something wrong")
 	}
 
+	log.Info().
+		Str("service", "user").
+		Str("module", "get user estamp").
+		Str("user_id", req.UId).
+		Msg("Successfully get user estamp")
+
 	return &proto.GetUserEstampResponse{
-		EventList: EventRawToDtoList(&events),
+		EventList: eventSrv.RawToDtoList(&events),
 	}, nil
 }
 
@@ -321,6 +425,10 @@ func RawToDto(in *user.User, imgUrl string) *proto.User {
 		in.CanSelectBaan = utils.BoolAdr(false)
 	}
 
+	if in.IsGotTicket == nil {
+		in.IsGotTicket = utils.BoolAdr(false)
+	}
+
 	if in.BaanID != nil {
 		baanId = in.BaanID.String()
 	}
@@ -344,27 +452,18 @@ func RawToDto(in *user.User, imgUrl string) *proto.User {
 		ImageUrl:        imgUrl,
 		CanSelectBaan:   *in.CanSelectBaan,
 		IsVerify:        *in.IsVerify,
+		IsGotTicket:     *in.IsGotTicket,
 		BaanId:          baanId,
 	}
 }
 
-func EventRawToDto(in *event.Event) *proto.Event {
-	return &proto.Event{
-		Id:            in.ID.String(),
-		NameTH:        in.NameTH,
-		DescriptionTH: in.DescriptionTH,
-		NameEN:        in.NameEN,
-		DescriptionEN: in.DescriptionEN,
-		Code:          in.Code,
-		ImageURL:      in.ImageURL,
+func GetColumnName(verifyName string) string {
+	switch verifyName {
+	case "vaccine":
+		return "is_verify"
+	case "ticket":
+		return "is_got_ticket"
+	default:
+		return ""
 	}
-}
-
-func EventRawToDtoList(in *[]*event.Event) []*proto.Event {
-	var result []*proto.Event
-	for _, e := range *in {
-		result = append(result, EventRawToDto(e))
-	}
-
-	return result
 }
